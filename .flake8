@@ -1,0 +1,3 @@
+# Ignore import at top of file
+[flake8]
+extend-ignore = E402

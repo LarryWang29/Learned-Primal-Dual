@@ -9,11 +9,11 @@ sinogram = "./data/observation_test_pseudodataset/observation_test_003.hdf5"
 with h5py.File(filename, "r") as f:
     # Print all root level object names (aka keys)
     # these can be group or dataset names
-    print(len(f))
-    print("Keys: %s" % f.keys())
+    # print(len(f))
+    # print("Keys: %s" % f.keys())
     # get first object name/key; may or may NOT be a group
     a_group_key = list(f.keys())[0]
-    print(a_group_key)
+    # print(a_group_key)
 
     # get the object type for a_group_key: usually group or dataset
     # print(type(f[a_group_key]))
@@ -25,14 +25,14 @@ with h5py.File(filename, "r") as f:
     # preferred methods to get dataset values:
     ds_obj = f[a_group_key]      # returns as a h5py dataset object
     ds_arr = f[a_group_key][()]  # returns as a numpy array
-    print(len(data))
-    print(data[0].shape)
+    # print(len(data))
+    # print(data[0].shape)
 
-    print(ds_obj.dtype)
-    print(ds_obj[0])
+    # print(ds_obj.dtype)
+    # print(ds_obj[0])
 
     # Export the first image to a text file
-    np.savetxt("first_image.txt", ds_arr[0])
+    # np.savetxt("first_image.txt", ds_arr[0])
 
     # Export the first sinogram to a text file
 with h5py.File(sinogram, "r") as f:
@@ -41,4 +41,8 @@ with h5py.File(sinogram, "r") as f:
     a_group_key = list(f.keys())[0]
     ds_arr = f[a_group_key][()]
 
-    np.savetxt("first_sino.txt", ds_arr[0])
+    # np.savetxt("first_sino.txt", ds_arr[0])
+
+    # Print the number of negative values in the sinogram
+    print(np.sum(ds_arr[0] < 0))
+    print(ds_arr[0].shape)
