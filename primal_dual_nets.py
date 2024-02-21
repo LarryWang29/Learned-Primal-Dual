@@ -1,7 +1,6 @@
 import torch.nn as nn
 import torch
 import tomosipo as ts
-from ts_algorithms import bp
 
 
 class PrimalNet(nn.Module):
@@ -133,22 +132,13 @@ class DualNet(nn.Module):
         return result
 
 
-class PrimalDualNet():
+class PrimalDualNet(nn.Module):
 
     def __init__(self, sinogram, input_dimension=362, n_detectors=513,
                  n_angles=1000, n_primal=5, n_dual=5, n_iterations=10):
         super().__init__()
 
-        # Initialise the primal and dual networks
-        self.primalnet = PrimalNet(n_primal)
-        self.dualnet = DualNet(n_dual)
-
         self.sinogram = sinogram
-
-        # Initialise primal and dual variables as tensors of 0s
-        self.primal = torch.zeros(n_primal, input_dimension,
-                                  input_dimension, 1)
-        self.dual = torch.zeros(n_dual, n_angles, n_detectors, 1)
 
         # Create projection geometries
         self.vg = ts.volume(shape=(1, input_dimension, input_dimension))
@@ -157,19 +147,43 @@ class PrimalDualNet():
         # Define the forward projector
         self.forward_projector = ts.operator(self.vg, self.pg)
 
-    def train(self):
+        # Store the primal nets and dual nets in ModuleLists
+        self.primal_list = nn.ModuleList([PrimalNet(n_primal)
+                                          for _ in range(n_iterations)])
+        self.dual_list = nn.ModuleList([DualNet(n_dual)
+                                        for _ in range(n_iterations)])
+
+        self.n_iterations = n_iterations
+
+    def forward(self):
+        # Initialise the primal and dual variables
+        # TODO: Change the dimensions of the primal and dual variables to class
+        #       attributes
+
+        primal = torch.zeros((1, 1, 362, 362))
+        dual = torch.zeros((1, 1, 513, 1000))
+
+        # Feed forward 10 times
         for i in range(self.n_iterations):
-            # Pass through the primal network; forward projection of the primal
-            fp_f = self.forward_projector(self.primal)
+            # Pass through the primal network; first forward project the primal
+            fp_f = self.forward_projector(primal[..., 1:2])
 
             # TODO: Need to add exponential transform
 
-            dual_update = self.primalnet.forward(self.primal, fp_f[..., 1:2],
-                                                 self.sinogram)
-            self.dual += dual_update
+            dual_update = self.primal_list[i].forward(dual, fp_f,
+                                                      self.sinogram)
+            dual += dual_update
 
-            # Pass through the dual network; backward projection dual primal
-            adj_h = bp(self.forward_projector, self.primal[..., 0:1] *
-                       self.dual[..., 0:1])
-            primal_update = self.dualnet.forward(self.primal, adj_h)
-            self.primal += primal_update
+            # Pass through the dual network; backward project the product of
+            # the first primal and the first dual
+            adj_h = self.forward_projector.T(primal[..., 0:1] *
+                                             dual[..., 0:1])
+            primal_update = self.dual_list[i].forward(primal, adj_h)
+            primal += primal_update
+
+        return primal[..., 0:1]
+
+
+model = PrimalDualNet(0)
+for name, param in model.named_parameters():
+    print(name, param.size())
