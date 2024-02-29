@@ -2,10 +2,12 @@ import torch
 import tomosipo as ts
 
 
-def add_noise(ground_truth):
+def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362):
     # Function to add custom noise instead of using readily simulated noisy data
-    vg = ts.volume(shape=(1, 362, 362))
-    pg = ts.parallel(angles=1000, shape=(1, 513))
+    vg = ts.volume(shape=(1, input_dimension, input_dimension),
+                   size=(1/input_dimension, 1, 1))
+    pg = ts.parallel(angles=n_angles, shape=(1, n_detectors),
+                     size=(1/input_dimension, n_detectors/input_dimension))
     A = ts.operator(vg, pg)
 
     # Forward project input data

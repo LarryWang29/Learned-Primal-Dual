@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch
 import tomosipo as ts
+from tomosipo.torch_support import to_autograd
 
 
 class DualNet(nn.Module):
@@ -178,16 +179,27 @@ class PrimalNet(nn.Module):
 
 class PrimalDualNet(nn.Module):
 
-    def __init__(self, input_dimension=362, n_detectors=513,
+    def __init__(self, vg, pg, input_dimension=362, n_detectors=513,
                  n_angles=1000, n_primal=5, n_dual=5, n_iterations=10):
         super(PrimalDualNet, self).__init__()
 
+        self.input_dimension = input_dimension
+        self.n_detectors = n_detectors
+        self.n_angles = n_angles
+
         # Create projection geometries
-        self.vg = ts.volume(shape=(1, input_dimension, input_dimension))
-        self.pg = ts.parallel(angles=n_angles, shape=(1, n_detectors))
+        self.vg = vg
+        self.pg = pg
 
         # Define the forward projector
         self.forward_projector = ts.operator(self.vg, self.pg)
+        # self.forward_projector = ts.operator(self.vg[:1], self.pg.to_vec()[:, :1, :])
+
+
+
+        self.op = to_autograd(self.forward_projector, is_2d=True, num_extra_dims=2)
+        self.adj_op = to_autograd(self.forward_projector.T, is_2d=True, num_extra_dims=2)
+
 
         # Store the primal nets and dual nets in ModuleLists
         self.primal_list = nn.ModuleList([PrimalNet(n_primal)
@@ -201,54 +213,39 @@ class PrimalDualNet(nn.Module):
 
         self.n_iterations = n_iterations
 
-        self.opnorm = 349530.28125
+        self.opnorm = self.operator_norm() * 1000
+        # self.opnorm = 1
 
 
-    def operator_norm(A, num_iter=10):
-        x = torch.randn(A.domain_shape)
+    def operator_norm(self, num_iter=25):
+        x = torch.randn(self.forward_projector.domain_shape)
         for i in range(num_iter):
-            x = A.T(A(x))
+            x = self.forward_projector.T(self.forward_projector(x))
             x /= torch.norm(x) # L2 vector-norm
-        return (torch.norm(A.T(A(x))) / torch.norm(x)).item()
+        norm = (torch.norm(self.forward_projector.T(self.forward_projector(x))) / torch.norm(x)).item()
+        print(norm)
+        return norm
 
     def forward(self, sinogram):
         # Initialise the primal and dual variables
 
-        primal = torch.zeros((1, self.n_primal, 362, 362))
-        dual = torch.zeros((1, self.n_dual, 1000, 513))
+        height, width = sinogram.shape[1:]
 
-        # mu_water = 0.02
+        # Using 1 as the batch size
+        primal = torch.zeros(1, self.n_primal, self.input_dimension, self.input_dimension)
+        dual = torch.zeros(1, self.n_dual, height, width)
 
-        # Feed forward 10 times
         for i in range(self.n_iterations):
-            # print(dual)
-            # Pass through the primal network; first forward project the primal
-            # fp_f = torch.exp(-mu_water *
-            #                  self.forward_projector(primal[:, 1:2, ...].squeeze(1)))
 
-            fp_f = self.forward_projector(primal[:, 1:2, ...].squeeze(1)) / self.opnorm
+            fp_f = self.op(primal[:, 1:2, ...])
 
-            # TODO: Need to add exponential transform
-            dual = self.dual_list[i].forward(dual, fp_f.unsqueeze(1),
-                                             sinogram.unsqueeze(1) / self.opnorm)
+            dual = self.dual_list[i].forward(dual, fp_f,
+                                             sinogram.unsqueeze(1))
 
-            # Pass through the dual network; backward project the product of
-            # the first primal and the first dual
+            
+            adj_h = self.adj_op(dual[:, 0:1, ...])
 
-            # # Forward project the first primal
-            # input = primal[:, 0:1, ...].squeeze(1)
-            # input = -mu_water * torch.exp(-mu_water * self.forward_projector(input))
-
-            # input *= dual[:, 0:1, ...].squeeze(1)
-            # adj_h = self.forward_projector.T(input)
-
-            # adj_h = self.forward_projector.T(dual[:, 0:1, ...].squeeze(1))
-
-            adj_h = self.forward_projector.T(dual[:, 0:1, ...].squeeze(1)) / self.opnorm
-
-            # print(adj_h)
-
-            primal = self.primal_list[i].forward(primal,
-                                                 adj_h.unsqueeze(1))
+            
+            primal = self.primal_list[i].forward(primal, adj_h)
 
         return primal[:, 0:1, ...]
