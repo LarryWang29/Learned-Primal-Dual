@@ -26,10 +26,16 @@ class DualNet(nn.Module):
 
         self.conv1 = nn.Conv2d(in_channels=n_dual + 2, out_channels=32,
                                kernel_size=(3, 3), padding=1)
-        self.act1 = nn.PReLU(num_parameters=32, init=0.0)
+        
+        # TODO: ReLU seems to promote more nonnegativity... Might switch
+        # back to PReLU later
+
+        # self.act1 = nn.PReLU(num_parameters=32, init=0.0)
+        self.act1 = nn.ReLU()
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=32,
                                kernel_size=(3, 3), padding=1)
-        self.act2 = nn.PReLU(num_parameters=32, init=0.0)
+        # self.act2 = nn.PReLU(num_parameters=32, init=0.0)
+        self.act2 = nn.ReLU()
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=n_dual,
                                kernel_size=(3, 3), padding=1)
 
@@ -74,18 +80,12 @@ class DualNet(nn.Module):
         # Concatenate dual, f2 and g
         input = torch.cat((dual, f2, g), 1)
 
-        # Permute the input to match the input shape of the dual network
-        # input = input.permute(0, 3, 1, 2)
-
         # Pass through the network
         result = self.conv1(input)
         result = self.act1(result)
         result = self.conv2(result)
         result = self.act2(result)
         result = self.conv3(result)
-
-        # Permute the result to match the output shape of the dual network
-        # result = result.permute(0, 2, 3, 1)
 
         # Add the result to dual and return the updated dual
         return dual + result
@@ -112,10 +112,12 @@ class PrimalNet(nn.Module):
 
         self.conv1 = nn.Conv2d(in_channels=n_primal + 1, out_channels=32,
                                kernel_size=(3, 3), padding=1)
-        self.act1 = nn.PReLU(num_parameters=32, init=0.0)
+        # self.act1 = nn.PReLU(num_parameters=32, init=0.0)
+        self.act1 = nn.ReLU()
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=32,
                                kernel_size=(3, 3), padding=1)
-        self.act2 = nn.PReLU(num_parameters=32, init=0.0)
+        # self.act2 = nn.PReLU(num_parameters=32, init=0.0)
+        self.act2 = nn.ReLU()
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=n_primal,
                                kernel_size=(3, 3), padding=1)
 
@@ -160,9 +162,6 @@ class PrimalNet(nn.Module):
         # Concatenate primal and f1
         input = torch.cat((primal, adj_h1), 1)
 
-        # Permute the input to match the input shape of the primal network
-        # input = input.permute(0, 3, 1, 2)
-
         # Pass through the network
         result = self.conv1(input)
         result = self.act1(result)
@@ -170,22 +169,17 @@ class PrimalNet(nn.Module):
         result = self.act2(result)
         result = self.conv3(result)
 
-        # Permute the result to match the output shape of the primal network
-        # result = result.permute(0, 2, 3, 1)
-
         # Add the result to primal and return the updated primal
         return primal + result
 
 
 class PrimalDualNet(nn.Module):
 
-    def __init__(self, vg, pg, input_dimension=362, n_detectors=513,
-                 n_angles=1000, n_primal=5, n_dual=5, n_iterations=10):
+    def __init__(self, vg, pg, input_dimension=362, 
+                 n_primal=5, n_dual=5, n_iterations=10):
         super(PrimalDualNet, self).__init__()
 
         self.input_dimension = input_dimension
-        self.n_detectors = n_detectors
-        self.n_angles = n_angles
 
         # Create projection geometries
         self.vg = vg
@@ -194,8 +188,6 @@ class PrimalDualNet(nn.Module):
         # Define the forward projector
         self.forward_projector = ts.operator(self.vg, self.pg)
         # self.forward_projector = ts.operator(self.vg[:1], self.pg.to_vec()[:, :1, :])
-
-
 
         self.op = to_autograd(self.forward_projector, is_2d=True, num_extra_dims=2)
         self.adj_op = to_autograd(self.forward_projector.T, is_2d=True, num_extra_dims=2)
@@ -213,38 +205,21 @@ class PrimalDualNet(nn.Module):
 
         self.n_iterations = n_iterations
 
-        self.opnorm = self.operator_norm() * 1000
-        # self.opnorm = 1
-
-
-    def operator_norm(self, num_iter=25):
-        x = torch.randn(self.forward_projector.domain_shape)
-        for i in range(num_iter):
-            x = self.forward_projector.T(self.forward_projector(x))
-            x /= torch.norm(x) # L2 vector-norm
-        norm = (torch.norm(self.forward_projector.T(self.forward_projector(x))) / torch.norm(x)).item()
-        print(norm)
-        return norm
-
     def forward(self, sinogram):
         # Initialise the primal and dual variables
 
         height, width = sinogram.shape[1:]
-
         # Using 1 as the batch size
-        primal = torch.zeros(1, self.n_primal, self.input_dimension, self.input_dimension)
-        dual = torch.zeros(1, self.n_dual, height, width)
+        primal = torch.zeros(1, self.n_primal, self.input_dimension, self.input_dimension).cuda()
+        dual = torch.zeros(1, self.n_dual, height, width).cuda()
 
         for i in range(self.n_iterations):
-
             fp_f = self.op(primal[:, 1:2, ...])
 
             dual = self.dual_list[i].forward(dual, fp_f,
                                              sinogram.unsqueeze(1))
 
-            
             adj_h = self.adj_op(dual[:, 0:1, ...])
-
             
             primal = self.primal_list[i].forward(primal, adj_h)
 
