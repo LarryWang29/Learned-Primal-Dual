@@ -14,15 +14,15 @@ torch.manual_seed(1029)
 # Define a function that trains the network
 def train_network(input_dimension=362, n_detectors=543,
                   n_angles=1000, n_primal=5, n_dual=5, n_iterations=10,
-                  epochs=200, learning_rate=0.001, beta=0.99, resume=False):
+                  epochs=5, learning_rate=0.001, beta=0.99, resume=False):
     loss_function = nn.MSELoss()
 
     # Set a global seed for reproducibility
     torch.manual_seed(1029)
 
     # Specify the paths
-    target_path = "./data/ground_truth_train/"
-    input_path = "./data/observation_train/"
+    target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_train/"
+    input_path = "/home/larrywang/Thesis project/dw661/data/observation_train/"
 
     # Create a dataset object
     dataset = TrainingDataset(target_path, input_path)
@@ -47,7 +47,7 @@ def train_network(input_dimension=362, n_detectors=543,
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
     
     if resume:
-        checkpoint = torch.load("checkpoint.pt")
+        checkpoint = torch.load("/home/larrywang/Thesis project/dw661/checkpoint.pt")
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
@@ -55,40 +55,43 @@ def train_network(input_dimension=362, n_detectors=543,
         loss = checkpoint["loss"]
 
 
-    training_data = next(iter(train_dataloader))
-
-    ground_truth = training_data[1].cuda()
-
-    observation = utils.add_noise(ground_truth, n_detectors=n_detectors,
-                                  n_angles=n_angles, input_dimension=input_dimension)
-    
-    observation.cuda()
 
     for epoch in range(epochs):
 
-        output = model.forward(observation).squeeze(1)
-        loss = loss_function(output, ground_truth)
+        print(len(train_dataloader))
+            
+        for batch in tqdm(train_dataloader):
 
-        # Zero the gradients
-        optimizer.zero_grad()
+            ground_truth = batch[1].cuda()
 
-        # Backward pass
-        loss.backward()
+            observation = utils.add_noise(ground_truth, n_detectors=n_detectors,
+                                        n_angles=n_angles, input_dimension=input_dimension)
 
-        # TODO: Add gradient clipping later
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0,
-                                       norm_type=2)
+            observation.cuda()
 
-        optimizer.step()
+            output = model.forward(observation).squeeze(1)
+            loss = loss_function(output, ground_truth)
 
-        # TODO: Add scheduler update later
-        scheduler.step()
+            # Zero the gradients
+            optimizer.zero_grad()
+
+            # Backward pass
+            loss.backward()
+
+            # TODO: Add gradient clipping later
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0,
+                                        norm_type=2)
+
+            optimizer.step()
+
+            # TODO: Add scheduler update later
+            scheduler.step()
 
         # Print out the loss, weights and biases in the model
-        # print(f"Epoch {i + 1}/{epochs}, Loss: {loss.item()}")
+        print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
         if epoch % 10 == 0:
-           save_checkpoint(epoch, model, optimizer, scheduler, loss, f"checkpoint.pt")
+           save_checkpoint(epoch, model, optimizer, scheduler, loss, f"/home/larrywang/Thesis project/dw661/checkpoint.pt")
 
 
     return model
@@ -104,46 +107,3 @@ def save_checkpoint(epoch, model, optimizer, scheduler, loss, file):
 
 
 model = train_network(n_primal=5, n_dual=5, resume=True)
-# Predict the output
-
-def evaluate_model(model, input_path, target_path):
-    model.eval()
-
-    # Specify the paths
-    target_path = "./data/ground_truth_train/"
-    input_path = "./data/observation_train/"
-
-    # Set a global seed for reproducibility
-    torch.manual_seed(1029)
-
-    # Create a dataset object
-    dataset = TrainingDataset(target_path, input_path)
-
-    # Obtain the first image
-    train_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-    training_data = next(iter(train_dataloader))
-
-    ground_truth = training_data[1].cuda()
-
-    observation = utils.add_noise(ground_truth, n_detectors=543,
-                                n_angles=1000, input_dimension=362).cuda()
-    output = model.forward(observation).squeeze(1)
-
-    # Visualiase the reconstruction with colour bar as well as the original image
-
-    plt.figure()
-    plt.subplot(1, 2, 1)
-    plt.imshow(training_data[1].squeeze(0))
-    plt.colorbar()
-    plt.title("Ground Truth")
-    plt.subplot(1, 2, 2)
-    plt.imshow(output.detach().cpu().numpy().squeeze(0))
-    plt.colorbar()
-    plt.title("Reconstructed Image")
-    plt.show()
-
-    print("Done!")
-
-target_path = "./data/ground_truth_train/"
-input_path = "./data/observation_train/"
-evaluate_model(model, target_path, input_path)

@@ -30,12 +30,12 @@ class DualNet(nn.Module):
         # TODO: ReLU seems to promote more nonnegativity... Might switch
         # back to PReLU later
 
-        # self.act1 = nn.PReLU(num_parameters=32, init=0.0)
-        self.act1 = nn.ReLU()
+        self.act1 = nn.PReLU(num_parameters=32, init=0.0)
+        # self.act1 = nn.ReLU()
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=32,
                                kernel_size=(3, 3), padding=1)
-        # self.act2 = nn.PReLU(num_parameters=32, init=0.0)
-        self.act2 = nn.ReLU()
+        self.act2 = nn.PReLU(num_parameters=32, init=0.0)
+        # self.act2 = nn.ReLU()
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=n_dual,
                                kernel_size=(3, 3), padding=1)
 
@@ -112,12 +112,12 @@ class PrimalNet(nn.Module):
 
         self.conv1 = nn.Conv2d(in_channels=n_primal + 1, out_channels=32,
                                kernel_size=(3, 3), padding=1)
-        # self.act1 = nn.PReLU(num_parameters=32, init=0.0)
-        self.act1 = nn.ReLU()
+        self.act1 = nn.PReLU(num_parameters=32, init=0.0)
+        # self.act1 = nn.ReLU()
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=32,
                                kernel_size=(3, 3), padding=1)
-        # self.act2 = nn.PReLU(num_parameters=32, init=0.0)
-        self.act2 = nn.ReLU()
+        self.act2 = nn.PReLU(num_parameters=32, init=0.0)
+        # self.act2 = nn.ReLU()
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=n_primal,
                                kernel_size=(3, 3), padding=1)
 
