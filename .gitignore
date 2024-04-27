@@ -3,4 +3,12 @@ data
 Thesis_Book
 .ipynb_checkpoints
 .ipynb
-Experimentations
+/Experimentations
+/checkpoints
+/checkpoints (1)
+learned_pd.ipynb
+Experimentations/toy_hdf5.py
+Experimentations/toy_FBP_tomosipo.py
+Experimentations/toy_FBP_implementation.py
+sinogram_pixel.py
+metrics.csv

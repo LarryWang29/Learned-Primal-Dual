@@ -22,7 +22,7 @@ class TrainingDataset(Dataset):
         # List of hdf5 files in the directory
         self.ground_truth_files = glob.glob(ground_truth_path_pattern)
 
-        # Sort the files with descending indices
+        # Sort the files with ascending indices
         self.ground_truth_files.sort()
 
         self.observation_files = glob.glob(observation_path_pattern)
@@ -60,8 +60,15 @@ class TestDataset(Dataset):
         
         # List of hdf5 files in the directory
         self.ground_truth_files = glob.glob(ground_truth_path_pattern)
+
+        # Sort the files with ascending indices
+        self.ground_truth_files.sort()
+
         self.observation_files = glob.glob(observation_path_pattern)
-    
+
+        # Sort the files with descending indices
+        self.observation_files.sort()
+
         # Count of hdf5 files
         self.num_of_files = len(self.ground_truth_files)
 
@@ -93,7 +100,14 @@ class ValidationDataset(Dataset):
         
         # List of hdf5 files in the directory
         self.ground_truth_files = glob.glob(ground_truth_path_pattern)
+
+        # Sort the files with ascending indices
+        self.ground_truth_files.sort()
+
         self.observation_files = glob.glob(observation_path_pattern)
+
+        # Sort the files with descending indices
+        self.observation_files.sort()
     
         # Count of hdf5 files
         self.num_of_files = len(self.ground_truth_files)
