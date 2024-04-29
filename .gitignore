@@ -13,3 +13,5 @@ Experimentations/toy_FBP_implementation.py
 sinogram_pixel.py
 *.csv
 pixel_value_experiment.ipynb
+/figures
+learned_pd_reference.ipynb

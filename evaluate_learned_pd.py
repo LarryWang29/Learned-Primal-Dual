@@ -5,6 +5,7 @@ import utils
 import tomosipo as ts
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from ts_algorithms import tv_min2d, fbp
 from tqdm import tqdm
 from primal_dual_nets import PrimalDualNet
@@ -15,9 +16,13 @@ from skimage.metrics import structural_similarity as ssim
 def evaluate_model(target_path, input_path, checkpoint_path, checkpoints):
     # Set a global seed for reproducibility
     torch.manual_seed(1029)
-    mse_array = []
-    psnr_array = []
-    ssim_array = []
+    mse_avg_array = []
+    psnr_avg_array = []
+    ssim_avg_array = []
+
+    mse_std_array = []
+    psnr_std_array = []
+    ssim_std_array = []
     
     input_dimension = 362
     n_detectors = 543
@@ -79,9 +84,21 @@ def evaluate_model(target_path, input_path, checkpoint_path, checkpoints):
         model_mse_avg = sum(model_mses) / len(model_mses)
         model_psnr_avg = sum(model_psnrs) / len(model_psnrs)
         model_ssim_avg = sum(model_ssims) / len(model_ssims)
-        mse_array.append(model_mse_avg)
-        psnr_array.append(model_psnr_avg)
-        ssim_array.append(model_ssim_avg)
+
+        model_mse_std = np.std(np.array(model_mses))
+        model_psnr_std = np.std(np.array(model_psnrs))
+        model_ssim_std = np.std(np.array(model_ssims))
+
+        mse_avg_array.append(model_mse_avg)
+        psnr_avg_array.append(model_psnr_avg)
+        ssim_avg_array.append(model_ssim_avg)
+
+        mse_std_array.append(model_mse_std)
+        psnr_std_array.append(model_psnr_std)
+        ssim_std_array.append(model_ssim_std)
+
+        # Make box plot and violin plot for each metric
+        make_boxplot_and_violinplot(model_mses, model_psnrs, model_ssims, f"nn_model_epoch_{checkpoint}")
     
     # Now compute the metrics for the FBP and TV models
     fbp_mses = []
@@ -135,40 +152,80 @@ def evaluate_model(target_path, input_path, checkpoint_path, checkpoints):
     fbp_psnr_avg = sum(fbp_psnrs) / len(fbp_psnrs)
     fbp_ssim_avg = sum(fbp_ssims) / len(fbp_ssims)
 
+    fbp_mse_std = np.std(np.array(fbp_mses))
+    fbp_psnr_std = np.std(np.array(fbp_psnrs))
+    fbp_ssim_std = np.std(np.array(fbp_ssims))
+
     tv_mse_avg = sum(tv_mses) / len(tv_mses)
     tv_psnr_avg = sum(tv_psnrs) / len(tv_psnrs)
     tv_ssim_avg = sum(tv_ssims) / len(tv_ssims)
 
-    return mse_array, psnr_array, ssim_array, fbp_mse_avg, fbp_psnr_avg, fbp_ssim_avg, tv_mse_avg, tv_psnr_avg, tv_ssim_avg
+    tv_mse_std = np.std(np.array(tv_mses))
+    tv_psnr_std = np.std(np.array(tv_psnrs))
+    tv_ssim_std = np.std(np.array(tv_ssims))
+
+    # Make box plot and violin plot for each metric
+    make_boxplot_and_violinplot(fbp_mses, fbp_psnrs, fbp_ssims, "fbp")
+    make_boxplot_and_violinplot(tv_mses, tv_psnrs, tv_ssims, "tv")
+
+    return mse_avg_array, psnr_avg_array, ssim_avg_array, mse_std_array, psnr_std_array, \
+    ssim_std_array, fbp_mse_avg, fbp_mse_std, fbp_psnr_avg, fbp_psnr_std, fbp_ssim_avg, fbp_ssim_std, \
+    tv_mse_avg, tv_mse_std, tv_psnr_avg, tv_psnr_std, tv_ssim_avg, tv_ssim_std
+
+
+def make_boxplot_and_violinplot(mses, psnrs, ssims, filename):
+    plt.boxplot(mses)
+    plt.title("Box plot of MSEs")
+    plt.savefig("figures/" + filename + "_mses_boxplot.png")
+    plt.close()
+
+    plt.boxplot(psnrs)
+    plt.title("Box plot of PSNRs")
+    plt.savefig("figures/" + filename + "_psnrs_boxplot.png")
+    plt.close()
+
+    plt.boxplot(ssims)
+    plt.title("Box plot of SSIMs")
+    plt.savefig("figures/" + filename + "_ssims_boxplot.png")
+    plt.close()
+
+    plt.violinplot(mses)
+    plt.title("Violin plot of MSEs")
+    plt.savefig("figures/" + filename + "_mses_violinplot.png")
+    plt.close()
+
+    plt.violinplot(psnrs)
+    plt.title("Violin plot of PSNRs")
+    plt.savefig("figures/" + filename + "_psnrs_violinplot.png")
+    plt.close()
+
+    plt.violinplot(ssims)
+    plt.title("Violin plot of SSIMs")
+    plt.savefig("figures/" + filename + "_ssims_violinplot.png")
+    plt.close()
 
 # checkpoints = torch.tensor([1])
 # checkpoints = torch.linspace(2, 10, 5, dtype=int)
 checkpoints = torch.tensor([50])
 
 outputs = evaluate_model("./data/ground_truth_test/", "./data/observation_test/", "./checkpoints (1)/", checkpoints)
-mse_array = outputs[0]
-psnr_array = outputs[1]
-ssim_array = outputs[2]
-
-fbp_mse_avg = outputs[3]
-fbp_psnr_avg = outputs[4]
-fbp_ssim_avg = outputs[5]
-
-tv_mse_avg = outputs[6]
-tv_psnr_avg = outputs[7]
-tv_ssim_avg = outputs[8]
+mse_avg_array, psnr_avg_array, ssim_avg_array, mse_std_array, psnr_std_array, \
+ssim_std_array, fbp_mse_avg, fbp_mse_std, fbp_psnr_avg, fbp_psnr_std, fbp_ssim_avg, fbp_ssim_std, \
+tv_mse_avg, tv_mse_std, tv_psnr_avg, tv_psnr_std, tv_ssim_avg, tv_ssim_std = outputs
 
 # Save the metrics to a csv file, where the columns are the metrics and the rows are the indices of the checkpoints
-metrics_dict = {"MSE": mse_array, "PSNR": psnr_array, "SSIM": ssim_array}
+metrics_dict = {"MSE_AVG": mse_avg_array, "MSE_STD": mse_std_array,
+                "PSNR_AVG": psnr_avg_array, "PSNR_STD": psnr_std_array,
+                "SSIM_AVG": ssim_avg_array, "SSIM_STD": ssim_std_array}
 metrics_df = pd.DataFrame(metrics_dict)
 metrics_df.to_csv("nn_metrics.csv")
-print("NN metrics saved to metrics.csv")
+print("Metrics saved to nn_metrics.csv")
 
 # Print the metrics for fbp and tv
-print("FBP MSE: ", fbp_mse_avg)
-print("FBP PSNR: ", fbp_psnr_avg)
-print("FBP SSIM: ", fbp_ssim_avg)
+print("FBP MSE: ", str(round(fbp_mse_avg, 4)) + "+-" + str(round(fbp_mse_std, 4)))
+print("FBP PSNR: ", str(round(fbp_psnr_avg, 4)) + "+-" + str(round(fbp_psnr_std, 4)))
+print("FBP SSIM: ", str(round(fbp_ssim_avg, 4)) + "+-" + str(round(fbp_ssim_std, 4)))
 
-print("TV MSE: ", tv_mse_avg)
-print("TV PSNR: ", tv_psnr_avg)
-print("TV SSIM: ", tv_ssim_avg)
+print("TV MSE: ", str(round(tv_mse_avg, 4)) + "+-" + str(round(tv_mse_std, 4)))
+print("TV PSNR: ", str(round(tv_psnr_avg, 4)) + "+-" + str(round(tv_psnr_std, 4)))
+print("TV SSIM: ", str(round(tv_ssim_avg, 4)) + "+-" + str(round(tv_ssim_std, 4)))
