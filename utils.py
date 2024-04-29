@@ -3,6 +3,9 @@ import tomosipo as ts
 
 
 def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362):
+    # Fix seed for reproduction
+    torch.manual_seed(1029)
+
     # Function to add custom noise instead of using readily simulated noisy data
     vg = ts.volume(shape=(1, input_dimension, input_dimension),
                    size=(1/input_dimension, 1, 1))
@@ -18,6 +21,9 @@ def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362):
 
     # Multiply by the mu coefficient then take the exponential
     transformed_sinogram = torch.exp(-projected_sinogram / max_pixel_value) * photons_per_pixel
+
+    # Clamp the transformed sinogram to ensure photon count is positive
+    transformed_sinogram = torch.clamp(transformed_sinogram, min=0.001)
 
     # Add Poisson noise to the sinogram
     noisy_sinogram = torch.poisson(transformed_sinogram) / photons_per_pixel

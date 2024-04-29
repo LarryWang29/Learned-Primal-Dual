@@ -11,4 +11,5 @@ Experimentations/toy_hdf5.py
 Experimentations/toy_FBP_tomosipo.py
 Experimentations/toy_FBP_implementation.py
 sinogram_pixel.py
-metrics.csv
+*.csv
+pixel_value_experiment.ipynb
