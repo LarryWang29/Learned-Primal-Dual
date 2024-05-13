@@ -80,6 +80,16 @@ def evaluate_model(target_path, input_path, checkpoint_path, checkpoints):
                                 ground_truth.detach().cpu().numpy().squeeze(0), data_range=data_range)
             model_ssims.append(model_ssim)
 
+            if model_psnr < 25:
+                plt.figure()
+                plt.subplot(1, 2, 1)
+                plt.imshow(test_data[1].squeeze(0), vmin=0, vmax=1, cmap="gray")
+                plt.title("Ground Truth")
+                plt.subplot(1, 2, 2)
+                plt.imshow(output.detach().cpu().numpy().squeeze(0), vmin=0, vmax=1, cmap="gray")
+                plt.title("Reconstructed Image")
+                plt.savefig("figures/bad_quality_reconstructions/" + f"nn_model_epoch_{checkpoint}_psnr_{model_psnr}.png")
+
         # Return the averages of the metrics
         model_mse_avg = sum(model_mses) / len(model_mses)
         model_psnr_avg = sum(model_psnrs) / len(model_psnrs)

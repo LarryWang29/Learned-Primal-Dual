@@ -16,7 +16,8 @@ torch.manual_seed(1029)
 # Define a function that trains the network
 def train_network(input_dimension=362, n_detectors=543,
                   n_angles=1000, n_primal=5, n_dual=5, n_iterations=10,
-                  epochs=50, learning_rate=0.001, beta=0.99, resume=False):
+                  epochs=50, learning_rate=0.001, beta=0.99, resume=False,
+                  checkpoint_path=None):
 
     loss_function = nn.MSELoss()
 
@@ -24,11 +25,11 @@ def train_network(input_dimension=362, n_detectors=543,
     torch.manual_seed(1029)
 
     # Specify the paths
-    target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_train"
-    input_path = "/home/larrywang/Thesis project/dw661/data/observation_train"
+    target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_train/"
+    input_path = "/home/larrywang/Thesis project/dw661/data/observation_train/"
 
-    validation_target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_validation"
-    validation_input_path = "/home/larrywang/Thesis project/dw661/data/observation_validation"
+    validation_target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_validation/"
+    validation_input_path = "/home/larrywang/Thesis project/dw661/data/observation_validation/"
 
     # Create a dataset object
     dataset = TrainingDataset(target_path, input_path)
@@ -41,8 +42,9 @@ def train_network(input_dimension=362, n_detectors=543,
     validation_dataloader = DataLoader(validation_dataset, batch_size=1, shuffle=False)
 
     # Open csv file to store validation metrics
-    f = open("/home/larrywang/Thesis project/dw661/validation_metrics.csv", "w")
-    f.write("Epoch, MSE_avg, MSE_std, PSNR_avg, PSNR_std, SSIM_avg, SSIM_std\n")
+    if not resume:
+        f = open("/home/larrywang/Thesis project/dw661/validation_metrics.csv", "w")
+        f.write("Epoch, MSE_avg, MSE_std, PSNR_avg, PSNR_std, SSIM_avg, SSIM_std\n")
 
     vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
     pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
@@ -61,21 +63,19 @@ def train_network(input_dimension=362, n_detectors=543,
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 130001)
     
     if resume:
-        checkpoint = torch.load("/home/dw661/Thesis/checkpoint.pt")
+        checkpoint = torch.load(checkpoint_path)
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
         epoch = checkpoint["epoch"]
-        # iteration = checkpoint["iteration"]
         loss = checkpoint["loss"]
-
+        epochs = epochs - epoch - 1
 
     for epoch in range(epochs):
 
         for iteration, training_data in enumerate(tqdm(train_dataloader), start=1):
             
-            # Load in new sample if iterations is a multiple of 10
-            # if epoch % 10 == 0:
+            model.train()
 
             ground_truth = training_data[1].cuda()
 
@@ -102,6 +102,8 @@ def train_network(input_dimension=362, n_detectors=543,
             # Update the scheduler
             scheduler.step()
 
+        # Print out the loss in the model
+        print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
         save_checkpoint(epoch, model, optimizer, scheduler, loss, 
                         f"/home/larrywang/Thesis project/dw661/checkpoints/checkpoint_epoch{epoch+1}.pt")
@@ -150,19 +152,15 @@ def train_network(input_dimension=362, n_detectors=543,
         model_ssim_std = np.std(np.array(model_ssims))
 
         # Write the metrics to the csv file
-        f.write(f"{epoch+1}, {model_mse_avg}, {model_mse_std}, {model_psnr_avg},
-                {model_psnr_std}, {model_ssim_avg}, {model_ssim_std}\n")
+        print("Writing metrics to csv file")
 
-
-        # Print out the loss in the model
-        print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
+        f.write(f"{epoch+1}, {model_mse_avg}, {model_mse_std}, {model_psnr_avg}, {model_psnr_std}, {model_ssim_avg}, {model_ssim_std}\n")
 
     return model
 
 def save_checkpoint(epoch, model, optimizer, scheduler, loss, file):
     torch.save( {
         "epoch": epoch,
-        # "iteration": iteration,
         "model_state_dict": model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
         "scheduler_state_dict": scheduler.state_dict(),
