@@ -80,15 +80,35 @@ def evaluate_model(target_path, input_path, checkpoint_path, checkpoints):
                                 ground_truth.detach().cpu().numpy().squeeze(0), data_range=data_range)
             model_ssims.append(model_ssim)
 
-            if model_psnr < 25:
-                plt.figure()
-                plt.subplot(1, 2, 1)
+            if model_psnr < 25 or model_ssim < 0.6:
+                plt.figure(figsize=(15, 5))
+                plt.subplot(1, 3, 1)
                 plt.imshow(test_data[1].squeeze(0), vmin=0, vmax=1, cmap="gray")
                 plt.title("Ground Truth")
-                plt.subplot(1, 2, 2)
+                plt.subplot(1, 3, 2)
                 plt.imshow(output.detach().cpu().numpy().squeeze(0), vmin=0, vmax=1, cmap="gray")
                 plt.title("Reconstructed Image")
-                plt.savefig("figures/bad_quality_reconstructions/" + f"nn_model_epoch_{checkpoint}_psnr_{model_psnr}.png")
+                plt.subplot(1, 3, 3)
+                plt.imshow(np.abs(output.detach().cpu().numpy().squeeze(0) - test_data[1].detach().cpu().numpy().squeeze(0)), vmin=0, vmax=0.1, cmap="Reds")
+                plt.title("Difference")
+                plt.tight_layout()
+                plt.savefig("figures/bad_quality_reconstructions/" + f"nn_model_epoch_{checkpoint}_psnr_{model_psnr}_ssim_{model_ssim}.png")
+                plt.close()
+
+            if model_psnr > 45 or model_ssim > 0.98:
+                plt.figure(figsize=(15, 5))
+                plt.subplot(1, 3, 1)
+                plt.imshow(test_data[1].squeeze(0), vmin=0, vmax=1, cmap="gray")
+                plt.title("Ground Truth")
+                plt.subplot(1, 3, 2)
+                plt.imshow(output.detach().cpu().numpy().squeeze(0), vmin=0, vmax=1, cmap="gray")
+                plt.title("Reconstructed Image")
+                plt.subplot(1, 3, 3)
+                plt.imshow(np.abs(output.detach().cpu().numpy().squeeze(0) - test_data[1].detach().cpu().numpy().squeeze(0)), vmin=0, vmax=0.1, cmap="Reds")
+                plt.title("Difference")
+                plt.tight_layout()
+                plt.savefig("figures/good_quality_reconstructions/" + f"nn_model_epoch_{checkpoint}_psnr_{model_psnr}_ssim_{model_ssim}.png")
+                plt.close()
 
         # Return the averages of the metrics
         model_mse_avg = sum(model_mses) / len(model_mses)
@@ -214,11 +234,12 @@ def make_boxplot_and_violinplot(mses, psnrs, ssims, filename):
     plt.savefig("figures/" + filename + "_ssims_violinplot.png")
     plt.close()
 
-# checkpoints = torch.tensor([1])
+checkpoints = torch.tensor([6])
 # checkpoints = torch.linspace(2, 10, 5, dtype=int)
-checkpoints = torch.tensor([50])
+# checkpoints = torch.tensor([50])
 
-outputs = evaluate_model("./data/ground_truth_test/", "./data/observation_test/", "./checkpoints (1)/", checkpoints)
+# outputs = evaluate_model("./data/ground_truth_test/", "./data/observation_test/", "./checkpoints (1)/", checkpoints)
+outputs = evaluate_model("./data/ground_truth_test/", "./data/observation_test/", "./full_data_checkpoints/", checkpoints)
 mse_avg_array, psnr_avg_array, ssim_avg_array, mse_std_array, psnr_std_array, \
 ssim_std_array, fbp_mse_avg, fbp_mse_std, fbp_psnr_avg, fbp_psnr_std, fbp_ssim_avg, fbp_ssim_std, \
 tv_mse_avg, tv_mse_std, tv_psnr_avg, tv_psnr_std, tv_ssim_avg, tv_ssim_std = outputs
