@@ -1,8 +1,10 @@
 import torch
 import tomosipo as ts
+from ts_algorithms.tv_min import grad_2D
 
 
-def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362):
+def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362,
+              photons_per_pixel=4096.0):
     # Fix seed for reproduction
     torch.manual_seed(1029)
 
@@ -16,13 +18,12 @@ def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362):
     # Forward project input data
     projected_sinogram = A(ground_truth)
 
-    photons_per_pixel = 4096.0
     max_pixel_value = torch.max(projected_sinogram)
 
     # Multiply by the mu coefficient then take the exponential
     transformed_sinogram = torch.exp(-projected_sinogram / max_pixel_value) * photons_per_pixel
 
-    # Clamp the transformed sinogram to ensure photon count is positive
+    # Clamp the transformed sinogram
     transformed_sinogram = torch.clamp(transformed_sinogram, min=0.001)
 
     # Add Poisson noise to the sinogram
@@ -32,3 +33,23 @@ def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362):
 
     # Assign target data to the noisy sinogram
     return noisy_sinogram
+
+
+def total_variation_loss(x, lam):
+    """
+    Function to calculate the total variation loss.
+
+    Parameters
+    ----------
+    x : torch.Tensor
+        Input data.
+    lambda : float
+        Regularization parameter.
+
+    Returns
+    -------
+    total_variation_loss : torch.Tensor
+        Total variation loss.
+    """
+    # Calculate the total variation loss
+    return lam * torch.sum(torch.abs(grad_2D(x)))
