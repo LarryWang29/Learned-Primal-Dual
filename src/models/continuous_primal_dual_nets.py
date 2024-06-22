@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torch
 import tomosipo as ts
+from ts_algorithms import fbp
+from ts_algorithms.operators import operator_norm
 from tomosipo.torch_support import to_autograd
 from torchdiffeq import odeint_adjoint
 
@@ -9,11 +11,11 @@ class ODELayer(nn.Module):
         super(ODELayer, self).__init__()
         
         self.odefunc = nn.Sequential(
-            # nn.InstanceNorm2d(32),
+            nn.InstanceNorm2d(32),
             nn.Conv2d(in_channels=32, out_channels=32,
                       kernel_size=(3, 3), padding=1),
             nn.PReLU(num_parameters=32, init=0.0),
-            # nn.InstanceNorm2d(32),
+            nn.InstanceNorm2d(32),
             nn.Conv2d(in_channels=32, out_channels=32,
                       kernel_size=(3, 3), padding=1),
             nn.PReLU(num_parameters=32, init=0.0),
@@ -36,7 +38,8 @@ class ODELayer(nn.Module):
                 nn.init.zeros_(m.bias)
     
     def forward(self, t, x):
-        return self.odefunc(x)
+        result = self.odefunc(x)
+        return result
 
 class ODEBlock(nn.Module):
     """
@@ -67,7 +70,6 @@ class ODEBlock(nn.Module):
         t = torch.tensor([0, 1]).float().cuda()
         x = odeint_adjoint(self.module, x, t, rtol=self.tol, atol=self.tol,
                            method='rk4')
-
         return x[1]
 
 
@@ -94,11 +96,11 @@ class ContinuousDualNet(nn.Module):
         self.upconv = nn.Conv2d(in_channels=n_dual + 2, out_channels=32,
                                kernel_size=(3, 3), padding=1)
         
-        self.act1 = nn.PReLU(num_parameters=32, init=0.0)
+        # self.act1 = nn.PReLU(num_parameters=32, init=0.0)
 
         self.odeblock = ODEBlock(ODELayer())
         self.downconv = nn.Conv2d(in_channels=32, out_channels=n_dual,
-                                    kernel_size=(3, 3), padding=1)
+                                    kernel_size=1, padding=0)
 
         # Intialise the weights and biases
         self._init_weights()
@@ -143,7 +145,7 @@ class ContinuousDualNet(nn.Module):
 
         # Pass through the network
         result = self.upconv(input)
-        result = self.act1(result)
+        # result = self.act1(result)
         result = self.odeblock(result)
         result = self.downconv(result)
 
@@ -173,11 +175,11 @@ class ContinuousPrimalNet(nn.Module):
         self.upconv = nn.Conv2d(in_channels=n_primal + 1, out_channels=32,
                                kernel_size=(3, 3), padding=1)
         
-        self.act1 = nn.PReLU(num_parameters=32, init=0.0)
+        # self.act1 = nn.PReLU(num_parameters=32, init=0.0)
 
         self.odeblock = ODEBlock(ODELayer())
         self.downconv = nn.Conv2d(in_channels=32, out_channels=n_primal,
-                                    kernel_size=(3, 3), padding=1)
+                                    kernel_size=1, padding=0)
 
         # Intialise the weights and biases
         self._init_weights()
@@ -222,7 +224,6 @@ class ContinuousPrimalNet(nn.Module):
 
         # Pass through the network
         result = self.upconv(input)
-        result = self.act1(result)
         result = self.odeblock(result)
         result = self.downconv(result)
 
@@ -262,21 +263,48 @@ class ContinuousPrimalDualNet(nn.Module):
 
         self.n_iterations = n_iterations
 
+        self.step_size = torch.tensor(1.0 / operator_norm(self.forward_projector))
+
+        self.lambda_dual = nn.ParameterList(
+                    [
+                        nn.Parameter(
+                            torch.ones(1)
+                            * 10 ** torch.log10(self.step_size)
+                        )
+                        for _ in range(self.n_iterations)
+                    ]
+                )
+        self.lambda_primal = nn.ParameterList(
+                    [
+                        nn.Parameter(
+                            torch.ones(1)
+                            * 10 ** torch.log10(self.step_size)
+                        )
+                        for _ in range(self.n_iterations)
+                    ]
+                )
+
     def forward(self, sinogram):
         # Initialise the primal and dual variables
 
         height, width = sinogram.shape[1:]
-        # Using 1 as the batch size
+        # Use fbp as the initial guess
+        fbp_recon = fbp(self.forward_projector, sinogram)
+        fbp_recon = torch.clip(fbp_recon, 0, 1)
+        # print(fbp_recon.shape)
         primal = torch.zeros(1, self.n_primal, self.input_dimension, self.input_dimension).cuda()
+        # Use fbp as reconstruction for all primal variables
+        for i in range(self.n_primal):
+            primal[:, i, ...] = fbp_recon
         dual = torch.zeros(1, self.n_dual, height, width).cuda()
 
         for i in range(self.n_iterations):
-            fp_f = self.op(primal[:, 1:2, ...])
+            fp_f = self.lambda_primal[i] * self.op(primal[:, 1:2, ...])
 
             dual = self.dual_list[i].forward(dual, fp_f,
                                              sinogram.unsqueeze(1))
 
-            adj_h = self.adj_op(dual[:, 0:1, ...])
+            adj_h = self.lambda_dual[i] * self.adj_op(dual[:, 0:1, ...])
             
             primal = self.primal_list[i].forward(primal, adj_h)
 

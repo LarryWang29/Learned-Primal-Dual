@@ -1,13 +1,13 @@
 import torch
 import matplotlib.pyplot as plt
-from dataloader import TestDataset
+from src.dataloader import TestDataset
 from torch.utils.data import DataLoader
-import utils
+import src.utils as utils
 import tomosipo as ts
 import numpy as np
 from ts_algorithms import tv_min2d
 from ts_algorithms import fbp
-from primal_dual_nets import PrimalDualNet
+from models.primal_dual_nets import PrimalDualNet
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes, mark_inset

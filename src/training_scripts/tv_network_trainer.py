@@ -1,8 +1,8 @@
 import torch.nn as nn
 import torch
-from tv_primal_dual_nets import PrimalDualNet
-from dataloader import TrainingDataset, ValidationDataset
-import utils
+from models.tv_primal_dual_nets import PrimalDualNet
+from src.dataloader import TrainingDataset, ValidationDataset
+import src.utils as utils
 from torch.utils.data import DataLoader
 import numpy as np
 import tomosipo as ts
@@ -19,7 +19,7 @@ def train_network(input_dimension=362, n_detectors=543,
                   epochs=50, learning_rate=0.001, beta=0.99, resume=False,
                   checkpoint_path=None):
 
-    # loss_function = nn.MSELoss()
+    loss_function = nn.MSELoss()
 
     # Set a global seed for reproducibility
     torch.manual_seed(1029)
@@ -85,9 +85,9 @@ def train_network(input_dimension=362, n_detectors=543,
             observation.cuda()
 
             output = model.forward(observation).squeeze(1)
-            # print(output.shape)
-            mse = nn.MSELoss()
-            loss = mse(output, ground_truth) + utils.total_variation_loss(output, 1e-8)
+            loss = loss_function(output, ground_truth)
+            # mse = nn.MSELoss()
+            # loss = mse(output, ground_truth) + utils.total_variation_loss(output, 1e-8)
 
             # Zero the gradients
             optimizer.zero_grad()

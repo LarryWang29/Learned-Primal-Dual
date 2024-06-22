@@ -1,22 +1,25 @@
 import torch.nn as nn
 import torch
-from learned_primal import LearnedPrimal
-from dataloader import TrainingDataset, ValidationDataset
-import utils
+from models.u_net import UNet
+from src.dataloader import TrainingDataset, ValidationDataset
+import src.utils as utils
 from torch.utils.data import DataLoader
 import numpy as np
 import tomosipo as ts
 from tqdm import tqdm
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
+from ts_algorithms import fbp
+import sys
 
 # Set a global seed for reproducibility
 torch.manual_seed(1029)
 
 # Define a function that trains the network
 def train_network(input_dimension=362, n_detectors=543,
-                  n_angles=1000, n_primal=5, n_iterations=10,
-                  epochs=50, learning_rate=0.001, beta=0.99, resume=False,
+                  n_angles=1000, epochs=50, learning_rate=0.001, 
+                  beta=0.99, photons_per_pixel=4096.0,
+                  option="default", resume=False,
                   checkpoint_path=None):
 
     loss_function = nn.MSELoss()
@@ -43,18 +46,18 @@ def train_network(input_dimension=362, n_detectors=543,
 
     # Open csv file to store validation metrics
     if not resume:
-        f = open("/home/larrywang/Thesis project/dw661/learned_primal_validation_metrics.csv", "w")
+        f = open(f"/home/larrywang/Thesis project/dw661/UNet_validation_metrics_{option}.csv", "w")
         f.write("Epoch, MSE_avg, MSE_std, PSNR_avg, PSNR_std, SSIM_avg, SSIM_std\n")
+    else:
+        f = open(f"/home/larrywang/Thesis project/dw661/UNet_validation_metrics_{option}.csv", "a")
 
     vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
     pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
                      size=(1/input_dimension, n_detectors/input_dimension))
     
-
-    model = LearnedPrimal(input_dimension=input_dimension,
-                          vg=vg, pg=pg,
-                          n_primal=n_primal,
-                          n_iterations=n_iterations).cuda()
+    A = ts.operator(vg, pg)
+    
+    model = UNet().cuda()
 
     optimizer = torch.optim.Adam(model.parameters(),
                                  lr=learning_rate, betas=(beta, 0.999))
@@ -80,11 +83,14 @@ def train_network(input_dimension=362, n_detectors=543,
             ground_truth = training_data[1].cuda()
 
             observation = utils.add_noise(ground_truth, n_detectors=n_detectors,
-                                        n_angles=n_angles, input_dimension=input_dimension)
+                                        n_angles=n_angles, input_dimension=input_dimension,
+                                        photons_per_pixel=photons_per_pixel)
 
             observation.cuda()
 
-            output = model.forward(observation).squeeze(1)
+            fbp_recon = fbp(A, observation)
+
+            output = model.forward(fbp_recon.unsqueeze(0)).squeeze(1)
             loss = loss_function(output, ground_truth)
 
             # Zero the gradients
@@ -105,8 +111,9 @@ def train_network(input_dimension=362, n_detectors=543,
         # Print out the loss in the model
         print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
-        save_checkpoint(epoch, model, optimizer, scheduler, loss, 
-                        f"/home/larrywang/Thesis project/dw661/learned_primal_checkpoints/checkpoint_epoch{epoch+1}.pt")
+        if (epoch + 1) % 5 == 0:
+            save_checkpoint(epoch, model, optimizer, scheduler, loss, 
+                            f"/home/larrywang/Thesis project/dw661/UNet_checkpoints_{option}/checkpoint_epoch{epoch+1}.pt")
         
         # Calculate the image metrics on validation set at the end of each epoch
         model.eval()
@@ -118,15 +125,18 @@ def train_network(input_dimension=362, n_detectors=543,
         model_ssims = []
 
         for validation_data in tqdm(validation_dataloader):
-            data_range = np.max(validation_data[1].cpu().numpy()) - np.min(validation_data[1].cpu().numpy())
+            data_range = 1.0
 
             ground_truth = validation_data[1].cuda()
 
             observation = utils.add_noise(ground_truth, n_detectors=n_detectors,
-                                        n_angles=n_angles, input_dimension=input_dimension).cuda()
+                                        n_angles=n_angles, input_dimension=input_dimension,
+                                        photons_per_pixel=photons_per_pixel).cuda()
+            
+            fbp_recon = fbp(A, observation)
 
             with torch.no_grad():
-                output = model.forward(observation).squeeze(1)
+                output = model.forward(fbp_recon.unsqueeze(0)).squeeze(1)
 
             # Calculate the MSE loss, PSNR and SSIM of the outputs
             model_mse = torch.mean((output - ground_truth) ** 2)
@@ -167,5 +177,16 @@ def save_checkpoint(epoch, model, optimizer, scheduler, loss, file):
         "loss": loss}, file
     )
 
-
-model = train_network(n_primal=5, resume=False)
+if __name__ == "__main__":
+    option = sys.argv[1]
+    if option == "limited":
+        model = train_network(n_angles=torch.linspace(0, torch.pi/3, 60),
+                                option=option, photons_per_pixel=1000.0, resume=False)
+    elif option == "sparse":
+        model = train_network(n_angles=60, 
+                                option=option, photons_per_pixel=1000.0, resume=False)
+    elif option == "default":
+        model = train_network(photons_per_pixel=4096.0, resume=False)
+                            #   checkpoint_path="/home/larrywang/Thesis project/dw661/UNet_checkpoints_default/checkpoint_epoch45.pt")
+    else:
+        print("Invalid option. Please choose from 'limited', 'sparse', or 'default'.")

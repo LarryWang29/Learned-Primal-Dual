@@ -1,8 +1,8 @@
 import torch.nn as nn
 import torch
-from primal_dual_nets import PrimalDualNet
-from dataloader import TrainingDataset, ValidationDataset
-import utils
+from models.continuous_primal_dual_nets import ContinuousPrimalDualNet
+from src.dataloader import TrainingDataset, ValidationDataset
+import src.utils as utils
 from torch.utils.data import DataLoader
 import numpy as np
 import tomosipo as ts
@@ -17,8 +17,8 @@ torch.manual_seed(1029)
 # Define a function that trains the network
 def train_network(input_dimension=362, n_detectors=543,
                   n_angles=1000, n_primal=5, n_dual=5, n_iterations=10,
-                  epochs=50, learning_rate=0.001, beta=0.99, photons_per_pixel=4096.0,
-                  option="default", resume=False,
+                  epochs=50, learning_rate=1e-4, beta=0.99, photons_per_pixel=4096.0,
+                  resume=False, option="default",
                   checkpoint_path=None):
 
     loss_function = nn.MSELoss()
@@ -45,7 +45,7 @@ def train_network(input_dimension=362, n_detectors=543,
 
     # Open csv file to store validation metrics
     if not resume:
-        f = open(f"/home/larrywang/Thesis project/dw661/LPD_validation_metrics_{option}.csv", "w")
+        f = open(f"/home/larrywang/Thesis project/dw661/cLPD_validation_metrics_{option}.csv", "w")
         f.write("Epoch, MSE_avg, MSE_std, PSNR_avg, PSNR_std, SSIM_avg, SSIM_std\n")
 
     vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
@@ -53,27 +53,27 @@ def train_network(input_dimension=362, n_detectors=543,
                      size=(1/input_dimension, n_detectors/input_dimension))
     
 
-    model = PrimalDualNet(input_dimension=input_dimension,
-                          vg=vg, pg=pg,
-                          n_primal=n_primal, n_dual=n_dual,
-                          n_iterations=n_iterations).cuda()
+    model = ContinuousPrimalDualNet(input_dimension=input_dimension,
+                                    vg=vg, pg=pg,
+                                    n_primal=n_primal, n_dual=n_dual,
+                                    n_iterations=n_iterations).cuda()
 
     optimizer = torch.optim.Adam(model.parameters(),
-                                 lr=learning_rate, betas=(beta, 0.999))
-
-    # Set up a scheduler to set up cosine annealing
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 130001)
+                                 lr=learning_rate, betas=(0.9, 0.99))
     
     if resume:
         checkpoint = torch.load(checkpoint_path)
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        # scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
         epoch = checkpoint["epoch"]
         loss = checkpoint["loss"]
         epochs = epochs - epoch - 1
 
     for epoch in range(epochs):
+
+        # Set up a scheduler to set up cosine annealing
+        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(train_dataloader))
 
         for iteration, training_data in enumerate(tqdm(train_dataloader), start=1):
             
@@ -90,6 +90,7 @@ def train_network(input_dimension=362, n_detectors=543,
             output = model.forward(observation).squeeze(1)
             loss = loss_function(output, ground_truth)
 
+            print(f"Loss: {loss.item()}")
             # Zero the gradients
             optimizer.zero_grad()
 
@@ -97,19 +98,19 @@ def train_network(input_dimension=362, n_detectors=543,
             loss.backward()
 
             # Clip the gradients according to 2-norm
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0,
-                                           norm_type=2)
+            # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0,
+            #                                norm_type=2)
 
             optimizer.step()
 
             # Update the scheduler
-            scheduler.step()
+            # scheduler.step()
 
         # Print out the loss in the model
         print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
-        save_checkpoint(epoch, model, optimizer, scheduler, loss, 
-                        f"/home/larrywang/Thesis project/dw661/LPD_checkpoints_{option}/checkpoint_epoch{epoch+1}.pt")
+        save_checkpoint(epoch, model, optimizer, loss, 
+                        f"/home/larrywang/Thesis project/dw661/cLPD_checkpoints_{option}/checkpoint_epoch{epoch+1}.pt")
         
         # Calculate the image metrics on validation set at the end of each epoch
         model.eval()
@@ -121,7 +122,7 @@ def train_network(input_dimension=362, n_detectors=543,
         model_ssims = []
 
         for validation_data in tqdm(validation_dataloader):
-            data_range = np.max(validation_data[1].cpu().numpy()) - np.min(validation_data[1].cpu().numpy())
+            data_range = 1.0
 
             ground_truth = validation_data[1].cuda()
 
@@ -162,12 +163,12 @@ def train_network(input_dimension=362, n_detectors=543,
 
     return model
 
-def save_checkpoint(epoch, model, optimizer, scheduler, loss, file):
+def save_checkpoint(epoch, model, optimizer, loss, file):
     torch.save( {
         "epoch": epoch,
         "model_state_dict": model.state_dict(),
         "optimizer_state_dict": optimizer.state_dict(),
-        "scheduler_state_dict": scheduler.state_dict(),
+        # "scheduler_state_dict": scheduler.state_dict(),
         "loss": loss}, file
     )
 

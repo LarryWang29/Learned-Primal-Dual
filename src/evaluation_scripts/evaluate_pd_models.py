@@ -1,17 +1,17 @@
 import torch
-from dataloader import TestDataset
+from src.dataloader import TestDataset
 from torch.utils.data import DataLoader
-import utils
+import src.utils as utils
 import tomosipo as ts
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from primal_dual_nets import PrimalDualNet as LPD
-from learned_primal import LearnedPrimal as LP
-from learned_PDHG import PrimalDualNet as LPDHG
-from tv_primal_dual_nets import PrimalDualNet as TVLPD
-from continuous_primal_dual_nets import ContinuousPrimalDualNet as cLPD
+from models.primal_dual_nets import PrimalDualNet as LPD
+from models.learned_primal import LearnedPrimal as LP
+from models.learned_PDHG import PrimalDualNet as LPDHG
+from models.tv_primal_dual_nets import PrimalDualNet as TVLPD
+from models.continuous_primal_dual_nets import ContinuousPrimalDualNet as cLPD
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 

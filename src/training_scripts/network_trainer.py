@@ -1,22 +1,24 @@
 import torch.nn as nn
 import torch
-from learned_PDHG import PrimalDualNet
-from dataloader import TrainingDataset, ValidationDataset
-import utils
+from models.primal_dual_nets import PrimalDualNet
+from src.dataloader import TrainingDataset, ValidationDataset
+import src.utils as utils
 from torch.utils.data import DataLoader
 import numpy as np
 import tomosipo as ts
 from tqdm import tqdm
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
+import sys
 
 # Set a global seed for reproducibility
 torch.manual_seed(1029)
 
 # Define a function that trains the network
 def train_network(input_dimension=362, n_detectors=543,
-                  n_angles=1000, n_iterations=10,
-                  epochs=50, learning_rate=0.001, beta=0.99, resume=False,
+                  n_angles=1000, n_primal=5, n_dual=5, n_iterations=10,
+                  epochs=50, learning_rate=0.001, beta=0.99, photons_per_pixel=4096.0,
+                  option="default", resume=False,
                   checkpoint_path=None):
 
     loss_function = nn.MSELoss()
@@ -43,7 +45,7 @@ def train_network(input_dimension=362, n_detectors=543,
 
     # Open csv file to store validation metrics
     if not resume:
-        f = open("/home/larrywang/Thesis project/dw661/learned_PDHG_validation_metrics.csv", "w")
+        f = open(f"/home/larrywang/Thesis project/dw661/LPD_validation_metrics_{option}.csv", "w")
         f.write("Epoch, MSE_avg, MSE_std, PSNR_avg, PSNR_std, SSIM_avg, SSIM_std\n")
 
     vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
@@ -53,6 +55,7 @@ def train_network(input_dimension=362, n_detectors=543,
 
     model = PrimalDualNet(input_dimension=input_dimension,
                           vg=vg, pg=pg,
+                          n_primal=n_primal, n_dual=n_dual,
                           n_iterations=n_iterations).cuda()
 
     optimizer = torch.optim.Adam(model.parameters(),
@@ -79,7 +82,8 @@ def train_network(input_dimension=362, n_detectors=543,
             ground_truth = training_data[1].cuda()
 
             observation = utils.add_noise(ground_truth, n_detectors=n_detectors,
-                                        n_angles=n_angles, input_dimension=input_dimension)
+                                        n_angles=n_angles, input_dimension=input_dimension,
+                                        photons_per_pixel=photons_per_pixel)
 
             observation.cuda()
 
@@ -105,7 +109,7 @@ def train_network(input_dimension=362, n_detectors=543,
         print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
         save_checkpoint(epoch, model, optimizer, scheduler, loss, 
-                        f"/home/larrywang/Thesis project/dw661/learned_PDHG_checkpoints/checkpoint_epoch{epoch+1}.pt")
+                        f"/home/larrywang/Thesis project/dw661/LPD_checkpoints_{option}/checkpoint_epoch{epoch+1}.pt")
         
         # Calculate the image metrics on validation set at the end of each epoch
         model.eval()
@@ -122,7 +126,8 @@ def train_network(input_dimension=362, n_detectors=543,
             ground_truth = validation_data[1].cuda()
 
             observation = utils.add_noise(ground_truth, n_detectors=n_detectors,
-                                        n_angles=n_angles, input_dimension=input_dimension).cuda()
+                                        n_angles=n_angles, input_dimension=input_dimension,
+                                        photons_per_pixel=photons_per_pixel).cuda()
 
             with torch.no_grad():
                 output = model.forward(observation).squeeze(1)
@@ -166,5 +171,15 @@ def save_checkpoint(epoch, model, optimizer, scheduler, loss, file):
         "loss": loss}, file
     )
 
-
-model = train_network(resume=False)
+if __name__ == "__main__":
+    option = sys.argv[1]
+    if option == "limited":
+        model = train_network(n_primal=5, n_dual=5, n_angles=torch.linspace(0, torch.pi/3, 60),
+                                option=option, photons_per_pixel=1000.0, resume=False)
+    elif option == "sparse":
+        model = train_network(n_primal=5, n_dual=5, n_angles=60, 
+                                option=option, photons_per_pixel=1000.0, resume=False)
+    elif option == "default":
+        model = train_network(n_primal=5, n_dual=5, photons_per_pixel=1000.0, resume=False)
+    else:
+        print("Invalid option. Please choose from 'limited', 'sparse', or 'default'.")

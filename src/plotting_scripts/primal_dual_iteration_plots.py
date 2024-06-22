@@ -1,10 +1,10 @@
 import torch
 import matplotlib.pyplot as plt
-from dataloader import TestDataset
+from src.dataloader import TestDataset
 from torch.utils.data import DataLoader
-import utils
+import src.utils as utils
 import numpy as np
-from primal_dual_nets import PrimalDualNet
+from models.primal_dual_nets import PrimalDualNet
 import tomosipo as ts
 
 def make_iteration_plot(model):
