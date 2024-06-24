@@ -1,8 +1,10 @@
 import torch.nn as nn
 import torch
+import sys
+sys.path.append("./src")
 from models.learned_PDHG import PrimalDualNet
-from src.dataloader import TrainingDataset, ValidationDataset
-import src.utils as utils
+from dataloader import TrainingDataset, ValidationDataset
+import utils as utils
 from torch.utils.data import DataLoader
 import numpy as np
 import tomosipo as ts
@@ -43,9 +45,10 @@ def train_network(input_dimension=362, n_detectors=543,
 
     # Open csv file to store validation metrics
     if not resume:
-        f = open("/home/larrywang/Thesis project/dw661/learned_PDHG_validation_metrics.csv", "w")
+        f = open("/home/larrywang/Thesis project/dw661/learned_PDHG_checkpoints/validation_metrics.csv", "w")
         f.write("Epoch, MSE_avg, MSE_std, PSNR_avg, PSNR_std, SSIM_avg, SSIM_std\n")
-
+    else:
+        f = open("/home/larrywang/Thesis project/dw661/learned_PDHG_checkpoints/validation_metrics.csv", "a")
     vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
     pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
                      size=(1/input_dimension, n_detectors/input_dimension))
@@ -104,7 +107,7 @@ def train_network(input_dimension=362, n_detectors=543,
         # Print out the loss in the model
         print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
-        save_checkpoint(epoch, model, optimizer, scheduler, loss, 
+        utils.save_checkpoint(epoch, model, optimizer, scheduler, loss, 
                         f"/home/larrywang/Thesis project/dw661/learned_PDHG_checkpoints/checkpoint_epoch{epoch+1}.pt")
         
         # Calculate the image metrics on validation set at the end of each epoch
@@ -156,15 +159,5 @@ def train_network(input_dimension=362, n_detectors=543,
         f.write(f"{epoch+1}, {model_mse_avg}, {model_mse_std}, {model_psnr_avg}, {model_psnr_std}, {model_ssim_avg}, {model_ssim_std}\n")
 
     return model
-
-def save_checkpoint(epoch, model, optimizer, scheduler, loss, file):
-    torch.save( {
-        "epoch": epoch,
-        "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
-        "scheduler_state_dict": scheduler.state_dict(),
-        "loss": loss}, file
-    )
-
 
 model = train_network(resume=False)

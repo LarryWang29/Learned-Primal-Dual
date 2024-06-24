@@ -1,7 +1,9 @@
 import torch
-from src.dataloader import TestDataset
+import sys
+sys.path.append("./src")
+from dataloader import TestDataset
 from torch.utils.data import DataLoader
-import src.utils as utils
+import utils as utils
 import tomosipo as ts
 import pandas as pd
 import numpy as np
@@ -246,7 +248,9 @@ def evaluate_model(
                     print("IQR: ", torch.stack(good_quality_iqr_array).mean().item())
 
                     # Make box plot and violin plot for each metric
-                    make_boxplot_and_violinplot(model_mses, model_psnrs, model_ssims, f"nn_model_epoch_{checkpoint}")
+                    utils.make_boxplot_and_violinplot(model_mses, 
+                                                      model_psnrs, model_ssims, 
+                                                      f"nn_model_epoch_{checkpoint}")
 
         # Return the averages of the metrics
         model_mse_avg = sum(model_mses) / len(model_mses)
@@ -275,38 +279,6 @@ def evaluate_model(
     )
 
 
-def make_boxplot_and_violinplot(mses, psnrs, ssims, filename):
-    plt.boxplot(mses)
-    plt.title("Box plot of MSEs")
-    plt.savefig("figures/" + filename + "_mses_boxplot.png")
-    plt.close()
-
-    plt.boxplot(psnrs)
-    plt.title("Box plot of PSNRs")
-    plt.savefig("figures/" + filename + "_psnrs_boxplot.png")
-    plt.close()
-
-    plt.boxplot(ssims)
-    plt.title("Box plot of SSIMs")
-    plt.savefig("figures/" + filename + "_ssims_boxplot.png")
-    plt.close()
-
-    plt.violinplot(mses)
-    plt.title("Violin plot of MSEs")
-    plt.savefig("figures/" + filename + "_mses_violinplot.png")
-    plt.close()
-
-    plt.violinplot(psnrs)
-    plt.title("Violin plot of PSNRs")
-    plt.savefig("figures/" + filename + "_psnrs_violinplot.png")
-    plt.close()
-
-    plt.violinplot(ssims)
-    plt.title("Violin plot of SSIMs")
-    plt.savefig("figures/" + filename + "_ssims_violinplot.png")
-    plt.close()
-
-
 checkpoints = [torch.tensor([50]), torch.tensor([50]), 
                torch.tensor([50]), torch.tensor([50]), 
                torch.tensor([50]), torch.tensor([50]),
@@ -323,7 +295,6 @@ model_types = ["LPD", "LPDHG", "LP", "LPD", "LPD", "TV_LPD", "TV_LPD", "TV_LPD",
 
 options = ["default", "default", "default", "limited", "sparse",
            "default", "limited", "sparse", "default"]
-
 for checkpoint, model_path, model_type, option in zip(checkpoints, model_paths, model_types, options):
     outputs = evaluate_model(
         "./data/ground_truth_test/", "./data/observation_test/", model_path, checkpoint, model_type, option,

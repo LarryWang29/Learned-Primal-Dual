@@ -1,7 +1,6 @@
 import torch
 import tomosipo as ts
-from ts_algorithms.tv_min import grad_2D
-
+import matplotlib.pyplot as plt
 
 def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362,
               photons_per_pixel=4096.0):
@@ -35,21 +34,42 @@ def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362,
     return noisy_sinogram
 
 
-def total_variation_loss(x, lam):
-    """
-    Function to calculate the total variation loss.
+def make_boxplot_and_violinplot(mses, psnrs, ssims, filename):
+    plt.boxplot(mses)
+    plt.title("Box plot of MSEs")
+    plt.savefig("figures/" + filename + "_mses_boxplot.png")
+    plt.close()
 
-    Parameters
-    ----------
-    x : torch.Tensor
-        Input data.
-    lambda : float
-        Regularization parameter.
+    plt.boxplot(psnrs)
+    plt.title("Box plot of PSNRs")
+    plt.savefig("figures/" + filename + "_psnrs_boxplot.png")
+    plt.close()
 
-    Returns
-    -------
-    total_variation_loss : torch.Tensor
-        Total variation loss.
-    """
-    # Calculate the total variation loss
-    return lam * torch.sum(torch.abs(grad_2D(x)))
+    plt.boxplot(ssims)
+    plt.title("Box plot of SSIMs")
+    plt.savefig("figures/" + filename + "_ssims_boxplot.png")
+    plt.close()
+
+    plt.violinplot(mses)
+    plt.title("Violin plot of MSEs")
+    plt.savefig("figures/" + filename + "_mses_violinplot.png")
+    plt.close()
+
+    plt.violinplot(psnrs)
+    plt.title("Violin plot of PSNRs")
+    plt.savefig("figures/" + filename + "_psnrs_violinplot.png")
+    plt.close()
+
+    plt.violinplot(ssims)
+    plt.title("Violin plot of SSIMs")
+    plt.savefig("figures/" + filename + "_ssims_violinplot.png")
+    plt.close()
+
+def save_checkpoint(epoch, model, optimizer, scheduler, loss, file):
+    torch.save( {
+        "epoch": epoch,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "scheduler_state_dict": scheduler.state_dict(),
+        "loss": loss}, file
+    )

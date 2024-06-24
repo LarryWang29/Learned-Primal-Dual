@@ -1,12 +1,14 @@
 import torch
-from src.dataloader import TestDataset
+import sys
+sys.path.append("./src")
+from dataloader import TestDataset
 from torch.utils.data import DataLoader
-import src.utils as utils
+import utils as utils
 import tomosipo as ts
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from ts_algorithms import tv_min2d, fbp
+from ts_algorithms import fbp
 from tqdm import tqdm
 from models.u_net import UNet
 from skimage.metrics import peak_signal_noise_ratio as psnr
@@ -197,7 +199,7 @@ def evaluate_model(
                 print("IQR: ", torch.stack(good_quality_iqr_array).mean().item())
 
                 # Make box plot and violin plot for each metric
-                make_boxplot_and_violinplot(
+                utils.make_boxplot_and_violinplot(
                     model_mses, model_psnrs, model_ssims, f"nn_model_epoch_{checkpoint}"
                 )
 
@@ -226,39 +228,6 @@ def evaluate_model(
         psnr_std_array,
         ssim_std_array,
     )
-
-
-def make_boxplot_and_violinplot(mses, psnrs, ssims, filename):
-    plt.boxplot(mses)
-    plt.title("Box plot of MSEs")
-    plt.savefig("figures/" + filename + "_mses_boxplot.png")
-    plt.close()
-
-    plt.boxplot(psnrs)
-    plt.title("Box plot of PSNRs")
-    plt.savefig("figures/" + filename + "_psnrs_boxplot.png")
-    plt.close()
-
-    plt.boxplot(ssims)
-    plt.title("Box plot of SSIMs")
-    plt.savefig("figures/" + filename + "_ssims_boxplot.png")
-    plt.close()
-
-    plt.violinplot(mses)
-    plt.title("Violin plot of MSEs")
-    plt.savefig("figures/" + filename + "_mses_violinplot.png")
-    plt.close()
-
-    plt.violinplot(psnrs)
-    plt.title("Violin plot of PSNRs")
-    plt.savefig("figures/" + filename + "_psnrs_violinplot.png")
-    plt.close()
-
-    plt.violinplot(ssims)
-    plt.title("Violin plot of SSIMs")
-    plt.savefig("figures/" + filename + "_ssims_violinplot.png")
-    plt.close()
-
 
 checkpoints = [torch.tensor([45]), torch.tensor([45]), torch.tensor([45])]
 

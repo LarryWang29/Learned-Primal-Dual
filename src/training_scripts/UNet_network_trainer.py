@@ -1,8 +1,10 @@
 import torch.nn as nn
 import torch
+import sys
+sys.path.append("./src")
 from models.u_net import UNet
-from src.dataloader import TrainingDataset, ValidationDataset
-import src.utils as utils
+from dataloader import TrainingDataset, ValidationDataset
+import utils as utils
 from torch.utils.data import DataLoader
 import numpy as np
 import tomosipo as ts
@@ -10,7 +12,6 @@ from tqdm import tqdm
 from skimage.metrics import peak_signal_noise_ratio as psnr
 from skimage.metrics import structural_similarity as ssim
 from ts_algorithms import fbp
-import sys
 
 # Set a global seed for reproducibility
 torch.manual_seed(1029)
@@ -46,10 +47,10 @@ def train_network(input_dimension=362, n_detectors=543,
 
     # Open csv file to store validation metrics
     if not resume:
-        f = open(f"/home/larrywang/Thesis project/dw661/UNet_validation_metrics_{option}.csv", "w")
+        f = open(f"/home/larrywang/Thesis project/dw661/UNet_checkpoints_{option}/validation_metrics.csv", "w")
         f.write("Epoch, MSE_avg, MSE_std, PSNR_avg, PSNR_std, SSIM_avg, SSIM_std\n")
     else:
-        f = open(f"/home/larrywang/Thesis project/dw661/UNet_validation_metrics_{option}.csv", "a")
+        f = open(f"/home/larrywang/Thesis project/dw661/UNet_checkpoints_{option}/validation_metrics.csv", "a")
 
     vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
     pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
@@ -112,7 +113,7 @@ def train_network(input_dimension=362, n_detectors=543,
         print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
         if (epoch + 1) % 5 == 0:
-            save_checkpoint(epoch, model, optimizer, scheduler, loss, 
+            utils.save_checkpoint(epoch, model, optimizer, scheduler, loss, 
                             f"/home/larrywang/Thesis project/dw661/UNet_checkpoints_{option}/checkpoint_epoch{epoch+1}.pt")
         
         # Calculate the image metrics on validation set at the end of each epoch
@@ -125,7 +126,7 @@ def train_network(input_dimension=362, n_detectors=543,
         model_ssims = []
 
         for validation_data in tqdm(validation_dataloader):
-            data_range = 1.0
+            data_range = np.max(validation_data[1].cpu().numpy()) - np.min(validation_data[1].cpu().numpy())
 
             ground_truth = validation_data[1].cuda()
 
@@ -168,15 +169,6 @@ def train_network(input_dimension=362, n_detectors=543,
 
     return model
 
-def save_checkpoint(epoch, model, optimizer, scheduler, loss, file):
-    torch.save( {
-        "epoch": epoch,
-        "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
-        "scheduler_state_dict": scheduler.state_dict(),
-        "loss": loss}, file
-    )
-
 if __name__ == "__main__":
     option = sys.argv[1]
     if option == "limited":
@@ -187,6 +179,5 @@ if __name__ == "__main__":
                                 option=option, photons_per_pixel=1000.0, resume=False)
     elif option == "default":
         model = train_network(photons_per_pixel=4096.0, resume=False)
-                            #   checkpoint_path="/home/larrywang/Thesis project/dw661/UNet_checkpoints_default/checkpoint_epoch45.pt")
     else:
         print("Invalid option. Please choose from 'limited', 'sparse', or 'default'.")

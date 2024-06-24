@@ -1,9 +1,10 @@
 import torch
-from src.dataloader import TestDataset
+import sys
+sys.path.append("./src")
+from dataloader import TestDataset
 from torch.utils.data import DataLoader
-import src.utils as utils
+import utils as utils
 import tomosipo as ts
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from ts_algorithms import tv_min2d, fbp

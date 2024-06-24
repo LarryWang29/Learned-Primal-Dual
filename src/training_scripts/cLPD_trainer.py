@@ -1,8 +1,10 @@
 import torch.nn as nn
 import torch
+import sys
+sys.path.append("./src")
 from models.continuous_primal_dual_nets import ContinuousPrimalDualNet
-from src.dataloader import TrainingDataset, ValidationDataset
-import src.utils as utils
+from dataloader import TrainingDataset, ValidationDataset
+import utils as utils
 from torch.utils.data import DataLoader
 import numpy as np
 import tomosipo as ts
@@ -45,8 +47,10 @@ def train_network(input_dimension=362, n_detectors=543,
 
     # Open csv file to store validation metrics
     if not resume:
-        f = open(f"/home/larrywang/Thesis project/dw661/cLPD_validation_metrics_{option}.csv", "w")
+        f = open(f"/home/larrywang/Thesis project/dw661/cLPD_checkpoints_{option}/validation_metrics.csv", "w")
         f.write("Epoch, MSE_avg, MSE_std, PSNR_avg, PSNR_std, SSIM_avg, SSIM_std\n")
+    else:
+        f = open(f"/home/larrywang/Thesis project/dw661/cLPD_checkpoints_{option}/validation_metrics.csv", "a")
 
     vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
     pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
@@ -59,13 +63,13 @@ def train_network(input_dimension=362, n_detectors=543,
                                     n_iterations=n_iterations).cuda()
 
     optimizer = torch.optim.Adam(model.parameters(),
-                                 lr=learning_rate, betas=(0.9, 0.99))
+                                 lr=learning_rate, betas=(0.99, 0.999))
     
     if resume:
         checkpoint = torch.load(checkpoint_path)
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        # scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
         epoch = checkpoint["epoch"]
         loss = checkpoint["loss"]
         epochs = epochs - epoch - 1
@@ -73,7 +77,7 @@ def train_network(input_dimension=362, n_detectors=543,
     for epoch in range(epochs):
 
         # Set up a scheduler to set up cosine annealing
-        # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(train_dataloader))
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, len(train_dataloader))
 
         for iteration, training_data in enumerate(tqdm(train_dataloader), start=1):
             
@@ -90,7 +94,6 @@ def train_network(input_dimension=362, n_detectors=543,
             output = model.forward(observation).squeeze(1)
             loss = loss_function(output, ground_truth)
 
-            print(f"Loss: {loss.item()}")
             # Zero the gradients
             optimizer.zero_grad()
 
@@ -104,12 +107,12 @@ def train_network(input_dimension=362, n_detectors=543,
             optimizer.step()
 
             # Update the scheduler
-            # scheduler.step()
+            scheduler.step()
 
         # Print out the loss in the model
         print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
-        save_checkpoint(epoch, model, optimizer, loss, 
+        utils.save_checkpoint(epoch, model, optimizer, scheduler, loss,
                         f"/home/larrywang/Thesis project/dw661/cLPD_checkpoints_{option}/checkpoint_epoch{epoch+1}.pt")
         
         # Calculate the image metrics on validation set at the end of each epoch
@@ -122,7 +125,7 @@ def train_network(input_dimension=362, n_detectors=543,
         model_ssims = []
 
         for validation_data in tqdm(validation_dataloader):
-            data_range = 1.0
+            data_range = np.max(validation_data[1].cpu().numpy()) - np.min(validation_data[1].cpu().numpy())
 
             ground_truth = validation_data[1].cuda()
 
@@ -163,15 +166,6 @@ def train_network(input_dimension=362, n_detectors=543,
 
     return model
 
-def save_checkpoint(epoch, model, optimizer, loss, file):
-    torch.save( {
-        "epoch": epoch,
-        "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
-        # "scheduler_state_dict": scheduler.state_dict(),
-        "loss": loss}, file
-    )
-
 if __name__ == "__main__":
     option = sys.argv[1]
     if option == "limited":
@@ -181,6 +175,6 @@ if __name__ == "__main__":
         model = train_network(n_primal=5, n_dual=5, n_angles=60, 
                                 option=option, photons_per_pixel=1000.0, resume=False)
     elif option == "default":
-        model = train_network(n_primal=5, n_dual=5, photons_per_pixel=1000.0, resume=False)
+        model = train_network(n_primal=5, n_dual=5, photons_per_pixel=4096.0, resume=False)
     else:
         print("Invalid option. Please choose from 'limited', 'sparse', or 'default'.")
