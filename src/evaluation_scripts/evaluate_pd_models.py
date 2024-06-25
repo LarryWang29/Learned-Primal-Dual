@@ -278,46 +278,46 @@ def evaluate_model(
         ssim_std_array
     )
 
+if __name__ == "__main__":
+    checkpoints = [torch.tensor([50]), torch.tensor([50]), 
+                torch.tensor([50]), torch.tensor([50]), 
+                torch.tensor([50]), torch.tensor([50]),
+                torch.tensor([50]), torch.tensor([50]),
+                torch.tensor([6])]
 
-checkpoints = [torch.tensor([50]), torch.tensor([50]), 
-               torch.tensor([50]), torch.tensor([50]), 
-               torch.tensor([50]), torch.tensor([50]),
-               torch.tensor([50]), torch.tensor([50]),
-               torch.tensor([6])]
+    model_paths = ["./LPD_checkpoints_default/", "./learned_PDHG_checkpoints/",
+                "./learned_primal_checkpoints/", "./LPD_checkpoints_limited/", 
+                "./LPD_checkpoints_sparse/", "./tv_checkpoints_default/",
+                "./tv_checkpoints_limited/", "./tv_checkpoints_sparse/",
+                "./full_data_checkpoints/"]
 
-model_paths = ["./LPD_checkpoints_default/", "./learned_PDHG_checkpoints/",
-               "./learned_primal_checkpoints/", "./LPD_checkpoints_limited/", 
-               "./LPD_checkpoints_sparse/", "./tv_checkpoints_default/",
-               "./tv_checkpoints_limited/", "./tv_checkpoints_sparse/",
-               "./full_data_checkpoints/"]
+    model_types = ["LPD", "LPDHG", "LP", "LPD", "LPD", "TV_LPD", "TV_LPD", "TV_LPD", "LPD"]
 
-model_types = ["LPD", "LPDHG", "LP", "LPD", "LPD", "TV_LPD", "TV_LPD", "TV_LPD", "LPD"]
+    options = ["default", "default", "default", "limited", "sparse",
+            "default", "limited", "sparse", "default"]
+    for checkpoint, model_path, model_type, option in zip(checkpoints, model_paths, model_types, options):
+        outputs = evaluate_model(
+            "./data/ground_truth_test/", "./data/observation_test/", model_path, checkpoint, model_type, option,
+            generate_images=False
+        )
+        (
+            mse_avg_array,
+            psnr_avg_array,
+            ssim_avg_array,
+            mse_std_array,
+            psnr_std_array,
+            ssim_std_array,
+        ) = outputs
 
-options = ["default", "default", "default", "limited", "sparse",
-           "default", "limited", "sparse", "default"]
-for checkpoint, model_path, model_type, option in zip(checkpoints, model_paths, model_types, options):
-    outputs = evaluate_model(
-        "./data/ground_truth_test/", "./data/observation_test/", model_path, checkpoint, model_type, option,
-        generate_images=False
-    )
-    (
-        mse_avg_array,
-        psnr_avg_array,
-        ssim_avg_array,
-        mse_std_array,
-        psnr_std_array,
-        ssim_std_array,
-    ) = outputs
-
-    # Save the metrics to a csv file, where the columns are the metrics and the rows are the indices of the checkpoints
-    metrics_dict = {
-        "MSE_AVG": mse_avg_array,
-        "MSE_STD": mse_std_array,
-        "PSNR_AVG": psnr_avg_array,
-        "PSNR_STD": psnr_std_array,
-        "SSIM_AVG": ssim_avg_array,
-        "SSIM_STD": ssim_std_array,
-    }
-    metrics_df = pd.DataFrame(metrics_dict)
-    metrics_df.to_csv(f"{model_path}metrics.csv", index=False)
-print("Evaluation complete")
+        # Save the metrics to a csv file, where the columns are the metrics and the rows are the indices of the checkpoints
+        metrics_dict = {
+            "MSE_AVG": mse_avg_array,
+            "MSE_STD": mse_std_array,
+            "PSNR_AVG": psnr_avg_array,
+            "PSNR_STD": psnr_std_array,
+            "SSIM_AVG": ssim_avg_array,
+            "SSIM_STD": ssim_std_array,
+        }
+        metrics_df = pd.DataFrame(metrics_dict)
+        metrics_df.to_csv(f"{model_path}metrics.csv", index=False)
+    print("Evaluation complete")

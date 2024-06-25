@@ -62,24 +62,25 @@ def make_iteration_plot(model):
     fig_primal.savefig("figures/iteration_plots/primal_iteration_plot.png")
     fig_dual.savefig("figures/iteration_plots/dual_iteration_plot.png")
 
-# Load the model from the checkpoint
-input_dimension = 362
-n_detectors = 543
-n_angles = 1000
-n_primal = 5
-n_dual = 5
-n_iterations = 10
+if __name__ == "__main__":
+    # Load the model from the checkpoint
+    input_dimension = 362
+    n_detectors = 543
+    n_angles = 1000
+    n_primal = 5
+    n_dual = 5
+    n_iterations = 10
 
-vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
-pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
-                    size=(1/input_dimension, n_detectors/input_dimension))
+    vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
+    pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
+                        size=(1/input_dimension, n_detectors/input_dimension))
 
-model = PrimalDualNet(input_dimension=input_dimension,
-                        vg=vg, pg=pg,
-                        n_primal=n_primal, n_dual=n_dual,
-                        n_iterations=n_iterations).cuda()
+    model = PrimalDualNet(input_dimension=input_dimension,
+                            vg=vg, pg=pg,
+                            n_primal=n_primal, n_dual=n_dual,
+                            n_iterations=n_iterations).cuda()
 
-dicts = torch.load(f"/home/larrywang/Thesis project/dw661/full_data_checkpoints/checkpoint_epoch6.pt")
-model.load_state_dict(dicts["model_state_dict"])
+    dicts = torch.load(f"/home/larrywang/Thesis project/dw661/full_data_checkpoints/checkpoint_epoch6.pt")
+    model.load_state_dict(dicts["model_state_dict"])
 
-make_iteration_plot(model)
+    make_iteration_plot(model)

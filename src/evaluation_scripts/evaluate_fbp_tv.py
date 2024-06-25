@@ -139,8 +139,9 @@ def evaluate_fbp_tv(target_path, input_path, option="default"):
         "tv_ssim_std": tv_ssim_std,
     }
 
-# Evaluate the FBP and TV algorithms on the test set
-outputs = evaluate_fbp_tv("./data/ground_truth_test/", "./data/observation_test/")
+if __name__ == "__main__":
+    # Evaluate the FBP and TV algorithms on the test set
+    outputs = evaluate_fbp_tv("./data/ground_truth_test/", "./data/observation_test/")
 
-# Print the metrics
-print(outputs)
+    # Print the metrics
+    print(outputs)

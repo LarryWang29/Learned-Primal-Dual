@@ -161,4 +161,5 @@ def train_network(input_dimension=362, n_detectors=543,
 
     return model
 
-model = train_network(n_primal=5, resume=False)
+if __name__ == "__main__":
+    model = train_network(n_primal=5, resume=False)

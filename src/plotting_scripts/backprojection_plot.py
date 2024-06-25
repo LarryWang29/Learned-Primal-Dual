@@ -7,60 +7,61 @@ from torch.utils.data import DataLoader
 import tomosipo as ts
 import matplotlib.pyplot as plt
 
-# Set a global seed for reproducibility
-torch.manual_seed(1029)
+if __name__ == "__main__":
+    # Set a global seed for reproducibility
+    torch.manual_seed(1029)
 
-# Specify the paths
-target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_test/"
-input_path = "/home/larrywang/Thesis project/dw661/data/observation_test/"
+    # Specify the paths
+    target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_test/"
+    input_path = "/home/larrywang/Thesis project/dw661/data/observation_test/"
 
-# Create a dataset object
-dataset = TestDataset(target_path, input_path)
-test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-_, ground_truth = next(iter(test_dataloader))
+    # Create a dataset object
+    dataset = TestDataset(target_path, input_path)
+    test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
+    _, ground_truth = next(iter(test_dataloader))
 
-# Define the projection geometries
-input_dimension = 362
-n_detectors = 543
-n_angles = 1000
-vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
-pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
-                 size=(1/input_dimension, n_detectors/input_dimension))
+    # Define the projection geometries
+    input_dimension = 362
+    n_detectors = 543
+    n_angles = 1000
+    vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
+    pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
+                    size=(1/input_dimension, n_detectors/input_dimension))
 
-A = ts.operator(vg, pg)
+    A = ts.operator(vg, pg)
 
-# Define two subplots
-plt.figure(figsize=(10, 5))
-ax1 = plt.subplot(1, 2, 1)
-ax1.imshow(ground_truth.squeeze(0).squeeze(0).cpu().numpy(), cmap="gray",
-           vmin=0, vmax=1)
+    # Define two subplots
+    plt.figure(figsize=(10, 5))
+    ax1 = plt.subplot(1, 2, 1)
+    ax1.imshow(ground_truth.squeeze(0).squeeze(0).cpu().numpy(), cmap="gray",
+            vmin=0, vmax=1)
 
-# Hide the ticks
-ax1.set_xticks([])
-ax1.set_yticks([])
-ax1.set_title("Ground Truth")
+    # Hide the ticks
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+    ax1.set_title("Ground Truth")
 
-# Plot the backprojection image
-backprojection = A.T(A(ground_truth))
-ax2 = plt.subplot(1, 2, 2)
-ax2.imshow(backprojection.squeeze(0).squeeze(0).cpu().numpy(), cmap="gray")
-ax2.set_title("Backprojection")
+    # Plot the backprojection image
+    backprojection = A.T(A(ground_truth))
+    ax2 = plt.subplot(1, 2, 2)
+    ax2.imshow(backprojection.squeeze(0).squeeze(0).cpu().numpy(), cmap="gray")
+    ax2.set_title("Backprojection")
 
-# Hide the ticks
-ax2.set_xticks([])
-ax2.set_yticks([])
+    # Hide the ticks
+    ax2.set_xticks([])
+    ax2.set_yticks([])
 
-plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-plt.savefig("figures/backprojection_figure/backprojection_plot.png")
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.savefig("figures/backprojection_figure/backprojection_plot.png")
 
-sinogram = A(ground_truth)
-plt.figure(figsize=(10, 6))
-plt.imshow(sinogram.squeeze(0).cpu().numpy().T, cmap="gray")
+    sinogram = A(ground_truth)
+    plt.figure(figsize=(10, 6))
+    plt.imshow(sinogram.squeeze(0).cpu().numpy().T, cmap="gray")
 
-# Hide the ticks
-plt.xticks([])
-plt.yticks([])
-plt.title("Example of a sinogram")
+    # Hide the ticks
+    plt.xticks([])
+    plt.yticks([])
+    plt.title("Example of a sinogram")
 
-plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-plt.savefig("figures/backprojection_figure/sinogram_plot.png")
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.savefig("figures/backprojection_figure/sinogram_plot.png")

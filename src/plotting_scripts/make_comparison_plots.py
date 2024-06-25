@@ -139,27 +139,28 @@ def add_zoomed_inset(ax, image, zoom_factor, loc='upper right'):
     inset_ax.set_yticks([])
     mark_inset(ax, inset_ax, loc1=3, loc2=4, fc="none", ec="red")
 
-input_dimension = 362
-n_detectors = 543
-n_angles = 1000
-n_primal = 5
-n_dual = 5
-n_iterations = 10
+if __name__ == "__main__":
+    input_dimension = 362
+    n_detectors = 543
+    n_angles = 1000
+    n_primal = 5
+    n_dual = 5
+    n_iterations = 10
 
-vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
-pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
-                    size=(1/input_dimension, n_detectors/input_dimension))
+    vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
+    pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
+                        size=(1/input_dimension, n_detectors/input_dimension))
 
-# checkpoints = torch.linspace(1, 50, 50, dtype=int)
-# checkpoints = torch.tensor([20, 50])
-checkpoints = torch.tensor([6])
+    # checkpoints = torch.linspace(1, 50, 50, dtype=int)
+    # checkpoints = torch.tensor([20, 50])
+    checkpoints = torch.tensor([6])
 
-for checkpoint in checkpoints:
-    model = PrimalDualNet(input_dimension=input_dimension,
-                            vg=vg, pg=pg,
-                            n_primal=n_primal, n_dual=n_dual,
-                            n_iterations=n_iterations).cuda()
-    # dicts = torch.load(f"/home/larrywang/Thesis project/dw661/checkpoints (1)/checkpoint_epoch{checkpoint}.pt")
-    dicts = torch.load(f"/home/larrywang/Thesis project/dw661/full_data_checkpoints/checkpoint_epoch{checkpoint}.pt")
-    model.load_state_dict(dicts["model_state_dict"])
-    calculate_metrics_and_make_plots(model)
+    for checkpoint in checkpoints:
+        model = PrimalDualNet(input_dimension=input_dimension,
+                                vg=vg, pg=pg,
+                                n_primal=n_primal, n_dual=n_dual,
+                                n_iterations=n_iterations).cuda()
+        # dicts = torch.load(f"/home/larrywang/Thesis project/dw661/checkpoints (1)/checkpoint_epoch{checkpoint}.pt")
+        dicts = torch.load(f"/home/larrywang/Thesis project/dw661/full_data_checkpoints/checkpoint_epoch{checkpoint}.pt")
+        model.load_state_dict(dicts["model_state_dict"])
+        calculate_metrics_and_make_plots(model)
