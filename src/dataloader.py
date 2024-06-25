@@ -1,5 +1,5 @@
 """
-dataloader.py - This module contains the dataset class for the CT images.
+This module contains the dataset classes for the CT images.
 In this module, three classes are defined: TrainingDataset, TestDataset, 
 and ValidationDataset. Each class inherits from the Dataset class in the 
 torch.utils.data module. Specifically, the TrainingDataset class is used

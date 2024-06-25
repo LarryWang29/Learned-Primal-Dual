@@ -1,3 +1,11 @@
+"""
+This module contains the implementation of the Learned Primal model, which is one
+of the alternative models suggested by Adler et al. in their paper "Learned Primal-Dual
+Reconstruction" (https://arxiv.org/abs/1707.06474). It's largely similar to Learned Primal
+Dual, but it only learns the primal part of the algorithm; the dual step is instead just
+a calculation on the current residual.
+"""
+
 import torch.nn as nn
 import torch
 import tomosipo as ts
@@ -5,7 +13,10 @@ from tomosipo.torch_support import to_autograd
 
 class PrimalNet(nn.Module):
     """
-    Implementation of the primal network, using a 3-layer CNN.
+    This class implements the 'Primal' networks, which are used to update the
+    primal variables in the Learned Primal algorithm. The particular
+    architecture used is a 3-layer CNN with PReLU activations and residual
+    connections at the end.
     """
     def __init__(self, n_primal):
         """
@@ -25,11 +36,11 @@ class PrimalNet(nn.Module):
         self.conv1 = nn.Conv2d(in_channels=n_primal + 1, out_channels=32,
                                kernel_size=(3, 3), padding=1)
         self.act1 = nn.PReLU(num_parameters=32, init=0.0)
-        # self.act1 = nn.ReLU()
+
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=32,
                                kernel_size=(3, 3), padding=1)
         self.act2 = nn.PReLU(num_parameters=32, init=0.0)
-        # self.act2 = nn.ReLU()
+
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=n_primal,
                                kernel_size=(3, 3), padding=1)
 
@@ -38,8 +49,9 @@ class PrimalNet(nn.Module):
 
     def _init_weights(self):
         """
-        Initialises the weights of the network using the Xavier initialisation
-        method.
+        A custom initialisation function for the weights and biases of the
+        network. The weights are initialised using the Xavier initialisation
+        method, and the biases are initialised to zero.
         """
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -52,17 +64,15 @@ class PrimalNet(nn.Module):
     def forward(self, primal, adj_h1):
         """
         Forward pass for the primal network. The inputs are all current
-        primals and the first primal variable. The output is the updated primal.
+        primals and the backprojection of the first dual variable. The
+        output is the updated primal.
 
         Parameters
         ----------
         primal : torch.Tensor
-            Dual variable at the current iteration.
-        fp_f1 : torch.Tensor
-            Forward projection of the first primal variable at the current
-            iteration.
+            primal variable at the current iteration.
         adj_h1 : torch.Tensor
-            Adjoint projection of first primal variable at the current
+            Backprojection of first dual variable at the current
             iteration.
 
         Returns
@@ -70,7 +80,7 @@ class PrimalNet(nn.Module):
         result : torch.Tensor
             Update for primal variable.
         """
-
+       
         # Concatenate primal and f1
         input = torch.cat((primal, adj_h1), 1)
 
@@ -86,9 +96,32 @@ class PrimalNet(nn.Module):
 
 
 class LearnedPrimal(nn.Module):
+    """
+    This class implements the Learned Primal algorithm, which is an alternative
+    to the Learned Primal-Dual algorithm. It combines the primal network with
+    a fixed update scheme for the dual variables.
+    """
 
     def __init__(self, vg, pg, input_dimension=362, 
                  n_primal=5, n_iterations=10):
+        """
+        Initialisation function for the LearnedPrimal class. The class contains
+        the forward and adjoint operators, as well as the primal networks.
+
+        Parameters
+        ----------
+        vg : tomosipo.VolumeGeometry
+            The volume geometry of the object being reconstructed.
+        pg : tomosipo.ProjectionGeometry
+            The projection geometry of the sinogram.
+        input_dimension : int
+            The size of the input image.
+        n_primal : int
+            The number of primal channels in "history".
+        n_iterations : int
+            The number of unrolled iterations to run the Learned Primal
+            algorithm.
+        """
         super(LearnedPrimal, self).__init__()
 
         self.input_dimension = input_dimension
@@ -99,7 +132,6 @@ class LearnedPrimal(nn.Module):
 
         # Define the forward projector
         self.forward_projector = ts.operator(self.vg, self.pg)
-        # self.forward_projector = ts.operator(self.vg[:1], self.pg.to_vec()[:, :1, :])
 
         self.op = to_autograd(self.forward_projector, is_2d=True, num_extra_dims=2)
         self.adj_op = to_autograd(self.forward_projector.T, is_2d=True, num_extra_dims=2)
@@ -118,6 +150,7 @@ class LearnedPrimal(nn.Module):
         primal = torch.zeros(1, self.n_primal, self.input_dimension, self.input_dimension).cuda()
 
         for i in range(self.n_iterations):
+            # Calculate the current residual
             dual = self.op(primal[:, 1:2, ...]) - sinogram.unsqueeze(1)
             
             adj = self.adj_op(dual)
