@@ -1,3 +1,20 @@
+"""
+This script is used to train the Total Variation Learned Primal Dual network, a custom variant of 
+the standard LPD model, inspired by Chambolle-Pock algorithm for Total Variation (exact algorithm 
+can be found at https://iopscience.iop.org/article/10.1088/0031-9155/57/10/3065).
+
+During training, there is option to resume training from a checkpoint, and the model is saved at the end of each epoch
+to a checkpoint file. The script also calculates the image metrics (MSE, PSNR, SSIM) on the validation set at the end of each epoch,
+and writes the metrics to a csv file. These metrics are used to monitor the performance of the model during training
+and to determine the best model to use for testing. There are three options for training: 'default', 'limited', and 'sparse'.
+Under the 'default' option, the physical geometry has 1000 projection angles, and 4096 photons per pixel;
+under the 'limited' option, the physical geometry has 60 projection angles in the range (0, pi/3), and 1000 photons per pixel;
+under the 'sparse' option, the physical geometry has 60 projection angles and 1000 photons per pixel.
+
+Example usage:
+python src/training_scripts/TV_LPD_network_trainer.py default (Trains the model under default geometry)
+"""
+
 import torch.nn as nn
 import torch
 import sys
@@ -21,6 +38,46 @@ def train_network(input_dimension=362, n_detectors=543,
                   epochs=50, learning_rate=0.001, beta=0.99, photons_per_pixel=4096.0,
                   option='default', resume=False,
                   checkpoint_path=None):
+
+    """
+    This function trains the Total Variance Learned Primal-Dual network on the training dataset.
+    The function uses the Mean Squared Error loss function and the Adam optimizer.
+    The function also calculates the image metrics (MSE, PSNR, SSIM) on the validation set at the end of each epoch,
+    and writes the metrics to a csv file.
+
+    Parameters
+    ----------
+    input_dimension : int
+        The size of the input image.
+    n_detectors : int
+        The number of detectors in the physical geometry.
+    n_angles : int or torch.Tensor
+        The number of projection angles in the physical geometry.
+    n_primal : int
+        The number of primal channels in "history".
+    n_dual : int
+        The number of dual channels in "history".
+    n_iterations : int
+        The number of unrolled iterations to run the algorithm.
+    epochs : int
+        The number of epochs to train the network.
+    learning_rate : float
+        The learning rate of the Adam optimizer.
+    beta : float
+        The beta parameter of the Adam optimizer.
+    photons_per_pixel : float
+        The number of photons per pixel in the physical geometry. Change this to simulate
+        different levels of noise in the data.
+    option : str
+        The option for training the network. There are three options: 'default', 'limited', and 'sparse'.
+        Under the 'default' option, the physical geometry has 1000 projection angles, and 4096 photons per pixel;
+        under the 'limited' option, the physical geometry has 60 projection angles in the range (0, pi/3), and 1000 photons per pixel;
+        under the 'sparse' option, the physical geometry has 60 projection angles and 1000 photons per pixel.
+    resume : bool
+        Boolean value to determine whether to resume training from a checkpoint or train from scratch.
+    checkpoint_path : str
+        The path to the checkpoint file to resume training from.
+    """
 
     loss_function = nn.MSELoss()
 
