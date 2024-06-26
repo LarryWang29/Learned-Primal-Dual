@@ -1,3 +1,12 @@
+"""
+This script is used to evaluate the performance of the UNet models on the test set.
+It calculates the mean squared error (MSE), peak signal-to-noise ratio (PSNR) and
+structural similarity index (SSIM) of the reconstructed images. The script also has the option
+to generate images of the reconstructions that have poor quality (PSNR < 25 or SSIM < 0.6)
+or good quality (PSNR > 45 or SSIM > 0.98). The script saves the metrics to a csv file
+and the images to the figures directory.
+"""
+
 import torch
 import sys
 sys.path.append("./src")
@@ -19,6 +28,34 @@ from skimage.metrics import structural_similarity as ssim
 def evaluate_model(
     target_path, input_path, checkpoint_path, checkpoints, option, generate_images=False
 ):
+    """
+    This function evaluates the performance of the UNet models on the test set.
+    It calculates the mean squared error (MSE), peak signal-to-noise ratio (PSNR) and
+    structural similarity index (SSIM) of the reconstructed images. The function also has the option
+    to generate images of the reconstructions that have poor quality (PSNR < 25 or SSIM < 0.6)
+    or good quality (PSNR > 45 or SSIM > 0.98). The function saves the metrics to a csv file
+    and the images to the figures directory.
+
+    Parameters
+    ----------
+    target_path : str
+        The path to the ground truth images.
+    input_path : str
+        The path to the observation images.
+    checkpoint_path : str
+        The path to the checkpoint files.
+    checkpoints : list
+        A list of the epochs to evaluate the model on.
+    option : str
+        The option to choose the physical geometry.
+    generate_images : bool
+        Boolean value to determine whether to generate images of the reconstructions.
+    
+    Returns
+    -------
+    tuple
+        A tuple containing the average and standard deviation of the MSE, PSNR and SSIM metrics.
+    """
     # Set a global seed for reproducibility
     torch.manual_seed(1029)
     mse_avg_array = []

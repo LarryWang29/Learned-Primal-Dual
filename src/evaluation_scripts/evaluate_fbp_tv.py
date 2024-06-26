@@ -1,3 +1,10 @@
+"""
+This script is used to evaluate the performance of non machine learning algorithms,
+such as filtered backprojection (FBP) and total variation (TV) minimisation, on the test set.
+The script calculates the image metrics (MSE, PSNR, SSIM) on the test set for both algorithms,
+and returns the average and standard deviation of the metrics.
+"""
+
 import torch
 import sys
 sys.path.append("./src")
@@ -15,6 +22,27 @@ from tqdm import tqdm
 
 
 def evaluate_fbp_tv(target_path, input_path, option="default"):
+    """
+    This function evaluates the performance of the FBP and TV algorithms on the test set.
+    The function calculates the image metrics (MSE, PSNR, SSIM) on the test set for both algorithms,
+    and returns the average and standard deviation of the metrics.
+
+    Parameters
+    ----------
+    target_path : str
+        The path to the ground truth images.
+    input_path : str
+        The path to the observation images.
+    option : str
+        The option to choose the physical geometry parameters.
+        The options are "default", "limited", and "sparse".
+    
+    Returns
+    -------
+    dict
+        A dictionary containing the average and standard deviation of the image metrics (MSE, PSNR, SSIM)
+        for the FBP and TV algorithms.
+    """
     # Set a global seed for reproducibility
     torch.manual_seed(1029)
     fbp_mses = []
