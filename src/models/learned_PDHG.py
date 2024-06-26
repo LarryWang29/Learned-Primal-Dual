@@ -218,6 +218,20 @@ class PrimalDualNet(nn.Module):
         self.n_iterations = n_iterations
 
     def forward(self, sinogram):
+        """
+        Forward pass for the PrimalDualNet class. The input is the noisy,
+        observed sinogram, and the output is the reconstructed image.
+
+        Parameters
+        ----------
+        sinogram : torch.Tensor
+            The observed noisy sinogram.
+        
+        Returns
+        -------
+        torch.Tensor
+            The reconstructed image.
+        """
         # Initialise the primal and dual variables
 
         height, width = sinogram.shape[1:]

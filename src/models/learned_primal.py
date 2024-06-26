@@ -147,6 +147,21 @@ class LearnedPrimal(nn.Module):
 
     def forward(self, sinogram):
 
+        """
+        Forward pass for the LearnedPrimal class. The input is the noisy,
+        observed sinogram, and the output is the reconstructed image.
+
+        Parameters
+        ----------
+        sinogram : torch.Tensor
+            The observed noisy sinogram.
+        
+        Returns
+        -------
+        torch.Tensor
+            The reconstructed image.
+        """
+
         primal = torch.zeros(1, self.n_primal, self.input_dimension, self.input_dimension).cuda()
 
         for i in range(self.n_iterations):

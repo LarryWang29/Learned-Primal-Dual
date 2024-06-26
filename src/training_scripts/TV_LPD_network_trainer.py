@@ -12,7 +12,7 @@ under the 'limited' option, the physical geometry has 60 projection angles in th
 under the 'sparse' option, the physical geometry has 60 projection angles and 1000 photons per pixel.
 
 Example usage:
-python src/training_scripts/TV_LPD_network_trainer.py default (Trains the model under default geometry)
+``python src/training_scripts/TV_LPD_network_trainer.py default # Trains the model under default geometry``
 """
 
 import torch.nn as nn

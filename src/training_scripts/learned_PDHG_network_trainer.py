@@ -6,7 +6,9 @@ to a checkpoint file. The script also calculates the image metrics (MSE, PSNR, S
 and writes the metrics to a csv file.
 
 Example usage:
-python src/training_scripts/learned_PDHG_network_trainer.py
+
+``python src/training_scripts/learned_PDHG_network_trainer.py``
+
 """
 
 import torch.nn as nn
