@@ -1,7 +1,7 @@
 """
 This script is used to generate example plot of the comparison between the ground truth 
 and the backprojection image, as well as an example plot of a sinogram. Specifically, figures
-2.1 and 2.2 in the thesis document are generated using this script.
+2.2 and 2.3 in the thesis document are generated using this script.
 """
 import torch
 import sys
