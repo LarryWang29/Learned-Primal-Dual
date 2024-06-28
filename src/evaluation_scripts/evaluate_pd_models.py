@@ -326,11 +326,11 @@ if __name__ == "__main__":
                 torch.tensor([50]), torch.tensor([50]),
                 torch.tensor([6])]
 
-    model_paths = ["./LPD_checkpoints_default/", "./learned_PDHG_checkpoints/",
-                "./learned_primal_checkpoints/", "./LPD_checkpoints_limited/", 
-                "./LPD_checkpoints_sparse/", "./tv_checkpoints_default/",
-                "./tv_checkpoints_limited/", "./tv_checkpoints_sparse/",
-                "./full_data_checkpoints/"]
+    model_paths = ["./checkpoints/LPD_checkpoints_default/", "./checkpoints/learned_PDHG_checkpoints/",
+                "./checkpoints/learned_primal_checkpoints/", "./checkpoints/LPD_checkpoints_limited/", 
+                "./checkpoints/LPD_checkpoints_sparse/", "./checkpoints/tv_checkpoints_default/",
+                "./checkpoints/tv_checkpoints_limited/", "./checkpoints/tv_checkpoints_sparse/",
+                "./checkpoints/full_data_checkpoints/"]
 
     model_types = ["LPD", "LPDHG", "LP", "LPD", "LPD", "TV_LPD", "TV_LPD", "TV_LPD", "LPD"]
 

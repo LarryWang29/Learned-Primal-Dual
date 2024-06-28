@@ -199,13 +199,13 @@ if __name__ == "__main__":
     ).cuda()
 
     lpd_dicts = torch.load(
-        "/home/larrywang/Thesis project/dw661/LPD_checkpoints_default/checkpoint_epoch50.pt"
+        "./checkpoints/LPD_checkpoints_default/checkpoint_epoch50.pt"
     )
     lpdhg_dicts = torch.load(
-        "/home/larrywang/Thesis project/dw661/learned_PDHG_checkpoints/checkpoint_epoch50.pt"
+        "./checkpoints/learned_PDHG_checkpoints/checkpoint_epoch50.pt"
     )
     lp_dicts = torch.load(
-        "/home/larrywang/Thesis project/dw661/learned_primal_checkpoints/checkpoint_epoch50.pt"
+        "./checkpoints/learned_primal_checkpoints/checkpoint_epoch50.pt"
     )
     lpd_model.load_state_dict(lpd_dicts["model_state_dict"])
     lpdhg_model.load_state_dict(lpdhg_dicts["model_state_dict"])

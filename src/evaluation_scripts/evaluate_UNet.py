@@ -270,9 +270,9 @@ if __name__ == "__main__":
     checkpoints = [torch.tensor([45]), torch.tensor([45]), torch.tensor([45])]
 
     model_paths = [
-        "./UNet_checkpoints_default/",
-        "./UNet_checkpoints_limited/",
-        "./UNet_checkpoints_sparse/",
+        "./checkpoints/UNet_checkpoints_default/",
+        "./checkpoints/UNet_checkpoints_limited/",
+        "./checkpoints/UNet_checkpoints_sparse/",
     ]
 
     options = ["default", "limited", "sparse"]

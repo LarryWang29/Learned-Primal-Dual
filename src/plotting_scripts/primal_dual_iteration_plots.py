@@ -122,7 +122,7 @@ if __name__ == "__main__":
     ).cuda()
 
     dicts = torch.load(
-        "/home/larrywang/Thesis project/dw661/full_data_checkpoints/checkpoint_epoch6.pt"
+        "./checkpoints/full_data_checkpoints/checkpoint_epoch6.pt"
     )
     model.load_state_dict(dicts["model_state_dict"])
 

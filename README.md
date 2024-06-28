@@ -86,17 +86,24 @@ All the packages used and their versions were included in the file `environments
 To run the Python scripts inside Docker, first build the image
 
 ```
-Docker build -t m2 .
+cocker build -t dw661 .
 ```
-This would generate an image called `m2`. To deploy and run the container, run the following command:
+This would generate an image called `dw661`. To deploy and run the container, run the following command:
 
 ```
-Docker run --rm -ti m2
+cocker run --rm -ti dw661
 ```
 This would start the process inside the container.
 
 ## Hardware Specifications
 Since this project uses the package `tomosipo` extensively, availability of GPU's is necessary since `tomosipo` is only compatible with GPU. It's recommended to train the networks on HPC, since training of full models may require extensive hours ($10 \sim 36$ hours, depending on the specific model trained).
+
+## Documentation
+All files necessary to generate documentations are under the directory `docs`. To generate HTML documenetation, first ensure that `Sphinx` is installed (which should be already in the specifications of `environment.yml`), then change working directory to `docs`, then run the following command:
+
+```
+make html
+```
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first

@@ -85,7 +85,7 @@ if __name__ == "__main__":
         n_dual=n_dual,
         n_iterations=n_iterations,
     ).cuda()
-    dicts = torch.load("tv_checkpoints_limited/checkpoint_epoch50.pt")
+    dicts = torch.load("./checkpoints/tv_checkpoints_limited/checkpoint_epoch50.pt")
     tv_model.load_state_dict(dicts["model_state_dict"])
 
     model = LPD(
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         n_dual=n_dual,
         n_iterations=n_iterations,
     ).cuda()
-    dicts = torch.load("LPD_checkpoints_limited/checkpoint_epoch50.pt")
+    dicts = torch.load("./checkpoints/LPD_checkpoints_limited/checkpoint_epoch50.pt")
     model.load_state_dict(dicts["model_state_dict"])
 
     # Specify the paths

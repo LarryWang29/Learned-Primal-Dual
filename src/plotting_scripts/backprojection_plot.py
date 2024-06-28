@@ -17,8 +17,8 @@ if __name__ == "__main__":
     torch.manual_seed(1029)
 
     # Specify the paths
-    target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_test/"
-    input_path = "/home/larrywang/Thesis project/dw661/data/observation_test/"
+    target_path = "./data/ground_truth_test/"
+    input_path = "./data/observation_test/"
 
     # Create a dataset object
     dataset = TestDataset(target_path, input_path)

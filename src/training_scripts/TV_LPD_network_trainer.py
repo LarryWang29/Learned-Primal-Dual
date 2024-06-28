@@ -85,11 +85,11 @@ def train_network(input_dimension=362, n_detectors=543,
     torch.manual_seed(1029)
 
     # Specify the paths
-    target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_train/"
-    input_path = "/home/larrywang/Thesis project/dw661/data/observation_train/"
+    target_path = "./data/ground_truth_train/"
+    input_path = "./data/observation_train/"
 
-    validation_target_path = "/home/larrywang/Thesis project/dw661/data/ground_truth_validation/"
-    validation_input_path = "/home/larrywang/Thesis project/dw661/data/observation_validation/"
+    validation_target_path = "./data/ground_truth_validation/"
+    validation_input_path = "./data/observation_validation/"
 
     # Create a dataset object
     dataset = TrainingDataset(target_path, input_path)
@@ -103,10 +103,10 @@ def train_network(input_dimension=362, n_detectors=543,
 
     # Open csv file to store validation metrics
     if not resume:
-        f = open(f"/home/larrywang/Thesis project/dw661/tv_checkpoints_{option}/validation_metrics.csv", "w")
+        f = open(f"./checkpoints/tv_checkpoints_{option}/validation_metrics.csv", "w")
         f.write("Epoch, MSE_avg, MSE_std, PSNR_avg, PSNR_std, SSIM_avg, SSIM_std\n")
     else:
-        f = open(f"/home/larrywang/Thesis project/dw661/tv_checkpoints_{option}/validation_metrics.csv", "a")
+        f = open(f"./checkpoints/tv_checkpoints_{option}/validation_metrics.csv", "a")
 
     vg = ts.volume(size=(1/input_dimension, 1, 1), shape=(1, input_dimension, input_dimension))
     pg = ts.parallel(angles=n_angles, shape=(1, n_detectors), 
@@ -169,7 +169,7 @@ def train_network(input_dimension=362, n_detectors=543,
         print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}")
 
         utils.save_checkpoint(epoch, model, optimizer, scheduler, loss, 
-                        f"/home/larrywang/Thesis project/dw661/tv_checkpoints_{option}/checkpoint_epoch{epoch+1}.pt")
+                        f"./checkpoints/tv_checkpoints_{option}/checkpoint_epoch{epoch+1}.pt")
         
         # Calculate the image metrics on validation set at the end of each epoch
         model.eval()
