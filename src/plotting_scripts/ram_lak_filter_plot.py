@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     plt.figure(figsize=(10, 5))
     plt.plot(x_array, ram_lak_filter)
-    # Shade the area under the curve where abs(x) > 0.7
+    # Shade the area under the curve where abs(x) > 0.75
     plt.fill_between(x_array, ram_lak_filter, where=np.abs(x_array) >= 0.75,
                     color="red", alpha=0.5, label="High Frequency")
     plt.fill_between(x_array, ram_lak_filter, where=np.abs(x_array) <= 0.75,
