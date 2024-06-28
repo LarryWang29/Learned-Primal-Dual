@@ -86,12 +86,12 @@ All the packages used and their versions were included in the file `environments
 To run the Python scripts inside Docker, first build the image
 
 ```
-cocker build -t dw661 .
+docker build -t dw661 .
 ```
 This would generate an image called `dw661`. To deploy and run the container, run the following command:
 
 ```
-cocker run --rm -ti dw661
+docker run --rm -ti dw661
 ```
 This would start the process inside the container.
 
