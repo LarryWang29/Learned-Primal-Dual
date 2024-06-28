@@ -91,9 +91,22 @@ docker build -t dw661 .
 This would generate an image called `dw661`. To deploy and run the container, run the following command:
 
 ```
-docker run --rm -ti dw661
+docker run --rm --gpus all -ti dw661
 ```
-This would start the process inside the container.
+This would start the process inside the container. `--gpus all` tag is needed to enable GPU inside the container, otherwise the scripts won't run properly. To enable GPU access inside containers, NVIDIA Container Toolkit needs to be installed. On devices with GPU's, run the following commands to install NVIDIA Container Toolkit if it isn't already available:
+
+1) Get the `.gpg` key set up:
+```
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+  && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
+  && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+```
+2) Install the toolkit:
+```
+sudo apt-get update
+sudo apt-get install -y nvidia-docker2
+```
+After running the above commands, NVIDIA Container Toolkit should be availble for use (if it isn't already).
 
 ## Hardware Specifications
 Since this project uses the package `tomosipo` extensively, availability of GPU's is necessary since `tomosipo` is only compatible with GPU. It's recommended to train the networks on HPC, since training of full models may require extensive hours ($10 \sim 36$ hours, depending on the specific model trained).
