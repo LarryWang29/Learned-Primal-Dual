@@ -93,7 +93,7 @@ This would generate an image called `dw661`. To deploy and run the container, ru
 ```
 docker run --rm --gpus all -ti dw661
 ```
-This would start the process inside the container. `--gpus all` tag is needed to enable GPU inside the container, otherwise the scripts won't run properly. To enable GPU access inside containers, NVIDIA Container Toolkit needs to be installed. On devices with GPU's, run the following commands to install NVIDIA Container Toolkit if it isn't already available:
+This would start the process inside the container. `--gpus all` tag is needed to enable GPU access inside the container, which is necessary for proper running of scripts. To enable GPU access inside containers, NVIDIA Container Toolkit needs to be installed. On devices with GPU's, run the following commands to install NVIDIA Container Toolkit if it isn't already available:
 
 1) Get the `.gpg` key set up:
 ```
