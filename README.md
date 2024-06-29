@@ -119,7 +119,7 @@ make html
 ```
 
 ## Readily trained checkpoints
-Trained checkpoints for Learned Primal Dual, Learned PDHG, Learned Primal, Continuous Learned Primal Dual and Total Variation Learned Primal Dual are included inside the repository, under the directory `checkpoins`. In the notebook `tutorial/example.ipynb`, an example use case for one of the models is given. This reference notebook can be modified accordingly to run pretrained checkpoints for other models, too.
+Trained checkpoints for Learned Primal Dual, Learned PDHG, Learned Primal, Continuous Learned Primal Dual and Total Variation Learned Primal Dual are included inside the repository, under the directory `checkpoints`. In the notebook `tutorial/example.ipynb`, an example use case for one of the models is given. This reference notebook can be modified accordingly to run pretrained checkpoints for other models, too.
 
 The pretrained FBPConvNet checkpoints take up a lot of storage, therefore they weren't included in the repository. Nevertheless, they can be made available on Google Drive if required.
 
