@@ -93,7 +93,7 @@ This would generate an image called `dw661`. To deploy and run the container, ru
 ```
 docker run --rm --gpus all -ti dw661
 ```
-This would start the process inside the container. `--gpus all` tag is needed to enable GPU access inside the container, which is necessary for proper running of scripts. To enable GPU access inside containers, NVIDIA Container Toolkit needs to be installed. On devices with GPU's, run the following commands to install NVIDIA Container Toolkit if it isn't already available:
+This would start the process inside the container. `--gpus all` tag is needed to enable GPU access inside the container, which is necessary for running of most scripts. To enable GPU access inside containers, NVIDIA Container Toolkit needs to be installed. On devices with GPU's, run the following commands to install NVIDIA Container Toolkit if it isn't already available:
 
 1) Get the `.gpg` key set up:
 ```
@@ -117,6 +117,11 @@ All files necessary to generate documentations are under the directory `docs`. T
 ```
 make html
 ```
+
+## Readily trained checkpoints
+Trained checkpoints for Learned Primal Dual, Learned PDHG, Learned Primal, Continuous Learned Primal Dual and Total Variation Learned Primal Dual are included inside the repository, under the directory `checkpoins`. In the notebook `tutorial/example.ipynb`, an example use case for one of the models is given. This reference notebook can be modified accordingly to run pretrained checkpoints for other models, too.
+
+The pretrained FBPConvNet checkpoints take up a lot of storage, therefore they weren't included in the repository. Nevertheless, they can be made available on Google Drive if required.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first
