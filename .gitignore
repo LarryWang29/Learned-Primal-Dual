@@ -4,7 +4,6 @@ Thesis_Book
 .ipynb_checkpoints
 *.ipynb
 /Experimentations
-/checkpoints
 /checkpoints (1)
 learned_pd.ipynb
 Experimentations/toy_hdf5.py
@@ -15,21 +14,17 @@ sinogram_pixel.py
 pixel_value_experiment.ipynb
 /figures
 learned_pd_reference.ipynb
-/full_data_checkpoints
 /primal_dual_nets_positional_embedding.py
 /tv_checkpoints
-/learned_primal_checkpoints
-/learned_PDHG_checkpoints
 reference_cLPD.py
-/cLPD_checkpoints_sparse
-/cLPD_checkpoints_default
-/cLPD_checkpoints_limited
-/LPD_checkpoints_limited
-/LPD_checkpoints_sparse
-/LPD_checkpoints_default
 /tv_checkpoints_tv_loss
-*.pt
 *.csv
 metrics
-# docs
 src/curlyBrace.py
+/not_used
+checkpoints/cLPD_checkpoints_default/checkpoint_epoch40.pt
+checkpoints/cLPD_checkpoints_limited/checkpoint_epoch50.pt
+checkpoints/cLPD_checkpoints_sparse/checkpoint_epoch50.pt
+checkpoints/UNet_checkpoints_default/checkpoint_epoch45.pt
+checkpoints/UNet_checkpoints_limited/checkpoint_epoch45.pt
+checkpoints/UNet_checkpoints_sparse/checkpoint_epoch45.pt
