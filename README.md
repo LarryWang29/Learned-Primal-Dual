@@ -69,7 +69,7 @@ Example:
 python src/training_scripts/learned_PDHG_network_trainer.py
 ```
 
-For the models that are mentioned in the extension secion of results, additional command line input is required to specify the physical setup to train the model in.
+For the models that are mentioned in the extension section of results, additional command line input is required to specify the physical setup to train the model in.
 - `default`- Corresponds to the original proposed physical geometry.
 - `sparse` - Has only $60$ angles of projection over $[0, 180]$ degrees, and initial intensity $I_{0} = 1000$. 
 - `limited` - Has only $60$ angles of projection over $[0, 60]$ degrees, and initial intensity $I_{0} = 1000$.  

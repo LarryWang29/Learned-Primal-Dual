@@ -151,8 +151,22 @@ def make_comparison_plots(lpd_model, lpdhg_model, lp_model):
 
 
 def add_zoomed_inset(ax, image, zoom_factor, loc="upper right"):
+    """
+    This function adds a zoomed inset to the image plot.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes object to add the zoomed inset to.
+    image : numpy.ndarray
+        The image to add the zoomed inset to.
+    zoom_factor : int
+        The zoom factor of the inset.
+    loc : str
+        The location of the inset.
+    """
     # Define the region to zoom in
-    x1, x2, y1, y2 = 210, 230, 230, 250
+    x1, x2, y1, y2 = 220, 250, 250, 280
     inset_ax = zoomed_inset_axes(ax, zoom_factor, loc=loc)
     inset_ax.imshow(image, vmin=0, vmax=0.2, cmap="gray")
     inset_ax.set_xlim(x1, x2)
