@@ -81,7 +81,7 @@ class PrimalNet(nn.Module):
             Update for primal variable.
         """
        
-        # Concatenate primal and f1
+        # Concatenate primal and adj_h1
         input = torch.cat((primal, adj_h1), 1)
 
         # Pass through the network
