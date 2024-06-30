@@ -1,7 +1,7 @@
 """
 This script is used to generate figures to compare the performances of LPD and TV-LPD under sparse
 view scenarios by visualising their reconstructions zoomed in on particular subsections, as well as 
-the difference images. Specifically, figures 4.6 and 4.7 in the thesis document are generated using
+the difference images. Specifically, figures 4.5 and 4.6 in the thesis document are generated using
 this script.
 """
 

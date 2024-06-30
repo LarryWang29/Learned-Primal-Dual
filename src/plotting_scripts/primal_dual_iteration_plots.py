@@ -1,7 +1,7 @@
 """
 This script is used to generate plots to specifically highlight the reconstructions of primal
 and dual variables at every second iteration of the primal-dual algorithm. The plots are saved
-as images in the figures/iteration_plots directory. Figures 4.8 (a) and (b) in the thesis document
+as images in the figures/iteration_plots directory. Figures 4.3 (a) and (b) in the thesis document
 are generated using this script.
 """
 

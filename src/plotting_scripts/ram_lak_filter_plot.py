@@ -1,6 +1,6 @@
 """
 This scripts generates a figure that shows ram-lak filter's high frequency magnification
-and low frequency suppression properties. Figure 3.1 in the thesis is generated using this
+and low frequency suppression properties. Figure 3.2 in the thesis is generated using this
 script.
 """
 
