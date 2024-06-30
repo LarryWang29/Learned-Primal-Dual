@@ -96,7 +96,7 @@ if __name__ == "__main__":
     ax.add_patch(patches.Rectangle([4, 2], width=2, height=2, color='gray', alpha=0.5))
 
     ax.text(8.5, 0.5, r'$L_{i}$', fontsize=12)
-    ax.text(6.2, 2.5, r'$\mu_{k}$', fontsize=12)
+    ax.text(6.2, 2.5, 'K-th pixel', fontsize=12)
 
     plt.savefig("figures/system_matrix.png")
     plt.close()
