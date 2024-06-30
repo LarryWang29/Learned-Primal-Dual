@@ -67,6 +67,7 @@ def evaluate_model(
     psnr_std_array = []
     ssim_std_array = []
 
+    # Define the physical geometry
     input_dimension = 362
     n_detectors = 543
 
@@ -97,6 +98,7 @@ def evaluate_model(
     test_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
     for checkpoint in checkpoints:
+        # Load the model
         model = UNet().cuda()
         dicts = torch.load(checkpoint_path + f"checkpoint_epoch{checkpoint}.pt")
         model.load_state_dict(dicts["model_state_dict"])
@@ -114,6 +116,7 @@ def evaluate_model(
 
             ground_truth = test_data[1].cuda()
 
+            # Add noise to the observation
             observation = utils.add_noise(
                 ground_truth,
                 n_detectors=543,
@@ -123,6 +126,7 @@ def evaluate_model(
             )
             observation = observation.cuda()
 
+            # Reconstruct the image using the FBPConvNet
             fbp_recon = fbp(A, observation)
             with torch.no_grad():
                 output = model.forward(fbp_recon.unsqueeze(0)).squeeze(1)
@@ -146,6 +150,7 @@ def evaluate_model(
             )
             model_ssims.append(model_ssim)
 
+            # Generate images of the reconstructions with poor or good quality
             if generate_images:
                 poor_quality_range_array = []
                 poor_quality_iqr_array = []

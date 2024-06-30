@@ -77,7 +77,7 @@ def train_network(input_dimension=362, n_detectors=543,
     # Create a dataset object
     dataset = TrainingDataset(target_path, input_path)
 
-    # Obtain the first image
+    # Set up the dataloader
     train_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
     validation_dataset = ValidationDataset(validation_target_path, validation_input_path)

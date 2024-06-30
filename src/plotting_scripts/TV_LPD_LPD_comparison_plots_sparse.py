@@ -167,7 +167,7 @@ if __name__ == "__main__":
                                                                                    output.detach().cpu().numpy().squeeze(0))))[0]
     plt.figure(figsize=(15, 5))
 
-    # Plot for Ground Truth
+    # Plot for LPD reconstruction
     ax1 = plt.subplot(1, 3, 1)
     # Hide ticks
     ax1.set_xticks([])
@@ -186,7 +186,7 @@ if __name__ == "__main__":
                      ground_truth=ground_truth.detach().cpu().numpy().squeeze(0),
                      loc='right')
 
-    # Plot for Ground Truth
+    # Plot for TV-LPD reconstruction
     ax1 = plt.subplot(1, 3, 2)
     # Hide ticks
     ax1.set_xticks([])
@@ -229,7 +229,7 @@ if __name__ == "__main__":
 
     # Plot the differences between ground truth and the outputs
     plt.figure(figsize=(10, 5))
-    # Plot for Ground Truth
+    # Plot for LPD
     ax1 = plt.subplot(1, 2, 1)
     # Hide ticks
     ax1.set_xticks([])
@@ -237,7 +237,7 @@ if __name__ == "__main__":
     ax1.imshow(np.abs(ground_truth.detach().cpu().numpy().squeeze(0) - output.detach().cpu().numpy().squeeze(0)), vmin=0, vmax=0.1, cmap='Reds')
     ax1.set_title("LPD")
 
-    # Plot for Ground Truth
+    # Plot for TV-LPD
     ax1 = plt.subplot(1, 2, 2)
     # Hide ticks
     ax1.set_xticks([])

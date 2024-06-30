@@ -80,6 +80,7 @@ def evaluate_model(
     psnr_std_array = []
     ssim_std_array = []
 
+    # Set up the model
     input_dimension = 362
     n_detectors = 543
     n_primal = 5
@@ -116,6 +117,7 @@ def evaluate_model(
     test_dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     for checkpoint in checkpoints:
+        # Select the type of model to evaluate
         if model == "cLPD":
             model = cLPD(
                 input_dimension=input_dimension,
@@ -156,6 +158,7 @@ def evaluate_model(
         else:
             raise ValueError("Invalid model")
 
+        # Load the model checkpoint
         dicts = torch.load(checkpoint_path + f"checkpoint_epoch{checkpoint}.pt")
         model.load_state_dict(dicts["model_state_dict"])
 
@@ -170,6 +173,7 @@ def evaluate_model(
 
             ground_truth = test_data[1].cuda()
 
+            # Add noise to the observation
             observation = utils.add_noise(
                 ground_truth,
                 n_detectors=543,
@@ -177,6 +181,8 @@ def evaluate_model(
                 input_dimension=362,
                 photons_per_pixel=photons_per_pixel,
             ).cuda()
+
+            # Reconstruct the image
             with torch.no_grad():
                 output = model.forward(observation).squeeze(1)
 
@@ -199,6 +205,7 @@ def evaluate_model(
             )
             model_ssims.append(model_ssim)
 
+            # Optionally generate images of the reconstructions that have poor quality or good quality
             if generate_images:
                 poor_quality_range_array = []
                 poor_quality_iqr_array = []

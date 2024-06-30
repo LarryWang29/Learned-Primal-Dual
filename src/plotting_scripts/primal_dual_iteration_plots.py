@@ -58,6 +58,7 @@ def make_iteration_plot(model):
     fig_primal, axs_primal = plt.subplots(5, 2, figsize=(8, 20))
     fig_dual, axs_dual = plt.subplots(5, 1, figsize=(8, 20))
 
+    # Iterate through every iteration and get the primal and dual variables at every second iteration
     for i in range(model.n_iterations):
         with torch.no_grad():
             dual = model.dual_list[i].forward(

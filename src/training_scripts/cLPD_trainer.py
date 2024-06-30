@@ -96,7 +96,7 @@ def train_network(input_dimension=362, n_detectors=543,
     # Create a dataset object
     dataset = TrainingDataset(target_path, input_path)
 
-    # Obtain the first image
+    # Set up dataloaders
     train_dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
     validation_dataset = ValidationDataset(validation_target_path, validation_input_path)
@@ -225,7 +225,7 @@ def train_network(input_dimension=362, n_detectors=543,
     return model
 
 if __name__ == "__main__":
-    # Create directory if it does not exist (as UNet checkpoints aren't in the repo due to size)
+    # Create directory if it does not exist (as cLPD checkpoints aren't in the repo due to size)
     option = sys.argv[1]
     os.makedirs("checkpoints/cLPD_checkpoints_"+option, exist_ok=True)
     
