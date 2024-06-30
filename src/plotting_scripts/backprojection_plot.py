@@ -3,6 +3,7 @@ This script is used to generate example plot of the comparison between the groun
 and the backprojection image, as well as an example plot of a sinogram. Specifically, figures
 2.2 and 2.3 in the thesis document are generated using this script.
 """
+import os
 import torch
 import sys
 
@@ -13,6 +14,9 @@ import tomosipo as ts
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
+    # Create a directory to store the figures
+    os.makedirs("figures/backprojection_figure", exist_ok=True)
+
     # Set a global seed for reproducibility
     torch.manual_seed(1029)
 

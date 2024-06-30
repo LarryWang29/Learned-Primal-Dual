@@ -4,6 +4,7 @@ visualising their reconstructions zoomed in on particular subsections. Specifica
 figure 4.1 in the thesis document is generated using this script.
 """
 
+import os
 import torch
 import matplotlib.pyplot as plt
 import sys
@@ -177,6 +178,9 @@ def add_zoomed_inset(ax, image, zoom_factor, loc="upper right"):
 
 
 if __name__ == "__main__":
+    # Create a directory to store the figures if it does not exist
+    os.makedirs("figures/comparison_plots", exist_ok=True)
+
     input_dimension = 362
     n_detectors = 543
     n_angles = 1000

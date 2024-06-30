@@ -5,7 +5,7 @@ the difference images. Specifically, figures 4.5 and 4.6 in the thesis document 
 this script.
 """
 
-
+import os
 import torch
 import sys
 
@@ -61,6 +61,9 @@ def add_zoomed_inset(
 
 
 if __name__ == "__main__":
+    # Create a directory to store the figures if it does not exist
+    os.makedirs("figures/TV_LPD_LPD_comparisons", exist_ok=True)
+
     # Load the model from the checkpoint
     input_dimension = 362
     n_detectors = 543

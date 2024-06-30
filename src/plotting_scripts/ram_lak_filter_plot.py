@@ -4,10 +4,14 @@ and low frequency suppression properties. Figure 3.2 in the thesis is generated 
 script.
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
+    # Create a directory to store the figures if it does not exist
+    os.makedirs("figures", exist_ok=True)
+
     x_array = np.linspace(-1, 1, 201)
     ram_lak_filter = np.abs(x_array)
 

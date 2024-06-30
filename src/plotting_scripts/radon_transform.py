@@ -4,6 +4,7 @@ in the Radon transform, as well as aiding demonstration the system matrix in dis
 of Radon Transform. Figure 3.1 in the report is generated using this script.
 """
 
+import os
 import sys
 sys.path.append("./src")
 
@@ -13,6 +14,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 if __name__ == "__main__":
+    # Create a directory to store the figures if it does not exist
+    os.makedirs("figures", exist_ok=True)
+
     # Create a new figure
     fig, ax = plt.subplots(figsize=(6, 6))
 

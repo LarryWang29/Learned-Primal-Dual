@@ -15,6 +15,7 @@ Example usage:
 
 """
 
+import os
 import torch.nn as nn
 import torch
 import sys
@@ -224,7 +225,10 @@ def train_network(input_dimension=362, n_detectors=543,
     return model
 
 if __name__ == "__main__":
+    # Create directory if it does not exist (as UNet checkpoints aren't in the repo due to size)
     option = sys.argv[1]
+    os.makedirs("checkpoints/cLPD_checkpoints_"+option, exist_ok=True)
+    
     if option == "limited":
         model = train_network(n_primal=5, n_dual=5, n_angles=torch.linspace(0, torch.pi/3, 60),
                                 option=option, photons_per_pixel=1000.0, resume=False)

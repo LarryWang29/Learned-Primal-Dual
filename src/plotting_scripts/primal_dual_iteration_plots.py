@@ -5,6 +5,7 @@ as images in the figures/iteration_plots directory. Figures 4.3 (a) and (b) in t
 are generated using this script.
 """
 
+import os
 import torch
 import matplotlib.pyplot as plt
 import sys
@@ -95,6 +96,9 @@ def make_iteration_plot(model):
 
 
 if __name__ == "__main__":
+    # Check if the directory exists, if not create it
+    os.makedirs("figures/iteration_plots", exist_ok=True)
+
     # Load the model from the checkpoint
     input_dimension = 362
     n_detectors = 543

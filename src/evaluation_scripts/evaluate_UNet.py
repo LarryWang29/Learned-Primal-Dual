@@ -7,6 +7,7 @@ or good quality (PSNR > 45 or SSIM > 0.98). The script saves the metrics to a cs
 and the images to the figures directory.
 """
 
+import os
 import torch
 import sys
 sys.path.append("./src")
@@ -267,6 +268,10 @@ def evaluate_model(
     )
 
 if __name__ == "__main__":
+   # Create the directories to save the images if they don't exist
+    os.makedirs("figures/bad_quality_reconstructions", exist_ok=True)
+    os.makedirs("figures/good_quality_reconstructions", exist_ok=True)
+
     checkpoints = [torch.tensor([45]), torch.tensor([45]), torch.tensor([45])]
 
     model_paths = [
