@@ -28,3 +28,4 @@ checkpoints/cLPD_checkpoints_sparse/checkpoint_epoch50.pt
 checkpoints/UNet_checkpoints_default/checkpoint_epoch45.pt
 checkpoints/UNet_checkpoints_limited/checkpoint_epoch45.pt
 checkpoints/UNet_checkpoints_sparse/checkpoint_epoch45.pt
+docs/_build

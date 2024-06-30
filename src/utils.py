@@ -14,7 +14,7 @@ def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362,
     This function adds noise to the ground truth data by simulating a sinogram
     using the tomosipo library. The sinogram is then transformed by multiplying
     by the mu coefficient and taking the exponential. Poisson noise is added to 
-    the transformed sinogram and the noisy sinogram is returned as the target data.
+    the transformed sinogram and the noisy sinogram is returned as the input data.
 
     Parameters
     ----------
@@ -28,6 +28,11 @@ def add_noise(ground_truth, n_detectors, n_angles, input_dimension=362,
         The size of the input image
     photons_per_pixel : float
         The number of photons per pixel in the simulated sinogram
+
+    Returns
+    -------
+    torch.Tensor
+        The noisy sinogram with added Poisson noise
     """
     # Fix seed for reproduction
     torch.manual_seed(1029)

@@ -180,7 +180,7 @@ class UNet(nn.Module):
         
         Returns
         -------
-        x : torch.Tensor
+        torch.Tensor
             The denoised image.
         """
         # downsampling part

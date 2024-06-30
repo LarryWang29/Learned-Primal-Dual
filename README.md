@@ -33,7 +33,7 @@ Next, to download the dataset, run
 zenodo_get 3384092
 ```
 
-in the directory of installation. However, it's important to note that the dataset's storage is approximately 55GB before decompression (total storage is approximately 120GB after extraction), therefore it's important to ensure there is sufficient storage before installing. For the same reason, we also advise that the dataset should be downloaded locally first, then mounted into the `Docker` container instead of downloading it inside the container.
+in the directory of installation. However, it's important to note that the dataset's storage is approximately 55GB before decompression (total storage is approximately 120GB after extraction), therefore it's important to ensure there is sufficient storage before installing. For the same reason, we also advise that the dataset should be downloaded locally first, then mounted into the `Docker` container with appropriate storage settings instead of downloading it inside the container. For testing purposes, it's sufficient to only mount a subset of all data into the container.
 
 ### Organisation of the repository
 As mentioned both the report and documentations, the repository is ordered into 4 directories and 2 helper files. Specifically:
